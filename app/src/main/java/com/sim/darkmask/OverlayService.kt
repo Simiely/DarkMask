@@ -267,6 +267,7 @@ class OverlayService : Service() {
         }
         hideFab.setOnCheckedChangeListener { _, c -> Prefs.setHideFab(this, c); applyAll() }
         close.setOnClickListener { closePanel() }
+        root.findViewById<Button>(R.id.btn_exit).setOnClickListener { stopSelf() }
 
         val list = arrayOf(
             "纯黑" to Color.BLACK,
