@@ -1,0 +1,13 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="56dp"
+    android:layout_height="56dp"
+    android:background="@drawable/bg_fab">
+
+    <ImageView
+        android:id="@+id/fab_icon"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_mask"
+        android:tint="#FFFFFF" />
+</FrameLayout>

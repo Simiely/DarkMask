@@ -1,0 +1,8 @@
+<resources>
+    <style name="Theme.DarkMask" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/accent</item>
+        <item name="colorPrimaryDark">@color/bg_dark</item>
+        <item name="android:colorBackground">@color/bg_dark</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+</resources>
