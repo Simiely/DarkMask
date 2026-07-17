@@ -12,8 +12,8 @@ android {
         minSdk = 23
         targetSdk = 35
         // 版本号仅在用户明确要求时手动更新，不再每次构建自增。
-        versionCode = 6
-        versionName = "1.6"
+        versionCode = 7
+        versionName = "2.1"
 
         // 仅保留中文资源，去掉 Material3 自带的 50+ 种语言翻译
         resourceConfigurations += setOf("zh")

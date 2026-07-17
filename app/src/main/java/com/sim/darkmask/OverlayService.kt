@@ -11,7 +11,9 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.animation.ValueAnimator
 import android.graphics.Color
+import android.graphics.drawable.ClipDrawable
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.LayerDrawable
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.Handler
@@ -78,7 +80,7 @@ class OverlayService : Service() {
             hslDragging = true
             Prefs.setColor(this@OverlayService, ColorUtil.hslToRgb(refs.h.progress, refs.s.progress, refs.l.progress))
             applyAll()
-            updateSelectedPresetVisual()
+            updatePresetPreview()
         }
         override fun onStartTrackingTouch(seekBar: SeekBar?) { hslDragging = true }
         override fun onStopTrackingTouch(seekBar: SeekBar?) {
@@ -445,15 +447,43 @@ class OverlayService : Service() {
         h.progress = hh; s.progress = ss; l.progress = ll
     }
 
-    /** HSL 拖动时选中预设的颜色块实时跟随（不保存到预设存储）。 */
-    private fun updateSelectedPresetVisual() {
+    /** HSL 拖动时选中预设右半实时显示新颜色，左半保持存储色（对分对比）。 */
+    private fun updatePresetPreview() {
         val sel = Prefs.getSelectedPreset(this)
         if (sel < 0 || sel >= 3) return
         val container = presetContainer ?: return
-        if (sel < container.childCount) {
-            val btn = container.getChildAt(sel) as? Button ?: return
-            val bg = btn.background as? GradientDrawable ?: return
-            bg.setColor(Prefs.getColor(this))
+        if (sel >= container.childCount) return
+        val btn = container.getChildAt(sel) as? Button ?: return
+
+        val storedColor = Prefs.getPreset(this, sel) ?: 0xFF333333.toInt()
+        val currentColor = Prefs.getColor(this)
+        val density = resources.displayMetrics.density
+        val selNow = Prefs.getSelectedPreset(this)
+
+        val storedLayer = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = (8 * density)
+            setColor(storedColor)
+            if (sel == selNow) setStroke((4 * density).toInt(), 0xFFFFD700.toInt())
+            else setStroke((2 * density).toInt(), 0xFF000000.toInt())
+        }
+
+        if (storedColor == currentColor) {
+            // 存色与当前色相同 → 单色满格
+            btn.background = storedLayer
+            btn.text = ""
+        } else {
+            // 上下层叠加：下层=存色（左半穿透），上层=当前色（右半显示）
+            val previewLayer = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = (8 * density)
+                setColor(currentColor)
+            }
+            val clip = ClipDrawable(previewLayer, Gravity.RIGHT, ClipDrawable.HORIZONTAL).apply {
+                level = 5000  // 右半 50%
+            }
+            btn.background = LayerDrawable(arrayOf(storedLayer, clip))
+            btn.text = ""
         }
     }
 
