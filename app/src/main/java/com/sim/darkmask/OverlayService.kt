@@ -43,6 +43,7 @@ class OverlayService : Service() {
         const val ACTION_OPEN = "com.sim.darkmask.ACTION_OPEN"
         const val ACTION_APPLY = "com.sim.darkmask.ACTION_APPLY"
         const val ACTION_PANEL = "com.sim.darkmask.ACTION_PANEL"
+        const val ACTION_START_AND_PANEL = "com.sim.darkmask.ACTION_START_AND_PANEL"
         private const val NOTIF_ID = 1001
 
         /** 服务是否正在运行（由 onCreate/onDestroy 管理，避免废弃的 getRunningServices API）。 */
@@ -68,6 +69,7 @@ class OverlayService : Service() {
     private var fabSize = 0
     private var hslDragging = false
     private var presetContainer: LinearLayout? = null
+    private var fabAnimator: ValueAnimator? = null
 
     private val hslListener = object : SeekBar.OnSeekBarChangeListener {
         override fun onProgressChanged(seekBar: SeekBar?, p: Int, fromUser: Boolean) {
@@ -92,7 +94,7 @@ class OverlayService : Service() {
                 ACTION_STOP -> stopSelf()
                 ACTION_OPEN -> openSettings()
                 ACTION_APPLY -> applyAll()
-                ACTION_PANEL -> showPanelExternal()
+                ACTION_PANEL, ACTION_START_AND_PANEL -> showPanelExternal()
             }
         }
     }
@@ -109,7 +111,7 @@ class OverlayService : Service() {
         val f = IntentFilter().apply {
             addAction(ACTION_TOGGLE); addAction(ACTION_STOP)
             addAction(ACTION_OPEN); addAction(ACTION_APPLY)
-            addAction(ACTION_PANEL)
+            addAction(ACTION_PANEL); addAction(ACTION_START_AND_PANEL)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
             registerReceiver(receiver, f, RECEIVER_NOT_EXPORTED)
@@ -297,7 +299,8 @@ class OverlayService : Service() {
     }
 
     private fun animateX(from: Int, to: Int) {
-        ValueAnimator.ofInt(from, to).apply {
+        fabAnimator?.cancel()
+        fabAnimator = ValueAnimator.ofInt(from, to).apply {
             duration = 250
             addUpdateListener {
                 fabParams!!.x = it.animatedValue as Int
@@ -477,13 +480,15 @@ class OverlayService : Service() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
+        handler.removeCallbacksAndMessages(null)
+        fabAnimator?.cancel()
         isRunning = false
         try { unregisterReceiver(receiver) } catch (_: Exception) {}
         dimView?.let { wm.removeView(it) }
         fab?.let { wm.removeView(it) }
         panel?.let { wm.removeView(it) }
         dimView = null; fab = null; panel = null
+        super.onDestroy()
     }
 
     private data class PanelRefs(
