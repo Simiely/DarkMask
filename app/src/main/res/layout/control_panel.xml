@@ -60,6 +60,14 @@
         android:textColor="@color/text_secondary"
         android:textSize="13sp" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="点按=应用并选中 · 长按=存入当前颜色"
+        android:textColor="@color/text_secondary"
+        android:textSize="11sp" />
+
     <LinearLayout
         android:id="@+id/ll_presets"
         android:layout_width="match_parent"
@@ -113,7 +121,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:text="保存当前颜色到槽位" />
+        android:text="保存当前颜色到选中预设" />
 
     <Switch
         android:id="@+id/sw_autonight"

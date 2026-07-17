@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -40,6 +41,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var swAutoNight: Switch
     private lateinit var swHideFab: Switch
     private lateinit var llPresets: LinearLayout
+    private var hslDragging = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,9 +71,19 @@ class MainActivity : AppCompatActivity() {
             Prefs.setOpacity(this, o); tvOpacity.text = "$o%"; applyToService()
         })
         seekH.max = 360; seekS.max = 100; seekL.max = 100
-        val hsl = simple { _ ->
-            Prefs.setColor(this, ColorUtil.hslToRgb(seekH.progress, seekS.progress, seekL.progress))
-            applyToService()
+        val hsl = object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) {
+                if (!fromUser) return
+                hslDragging = true
+                Prefs.setColor(this@MainActivity, ColorUtil.hslToRgb(seekH.progress, seekS.progress, seekL.progress))
+                applyToService()
+            }
+            override fun onStartTrackingTouch(sb: SeekBar?) { hslDragging = true }
+            override fun onStopTrackingTouch(sb: SeekBar?) {
+                hslDragging = false
+                Prefs.setSelectedPreset(this@MainActivity, -1)
+                buildPresets()
+            }
         }
         seekH.setOnSeekBarChangeListener(hsl)
         seekS.setOnSeekBarChangeListener(hsl)
@@ -81,11 +93,12 @@ class MainActivity : AppCompatActivity() {
 
         buildPresets()
         findViewById<Button>(R.id.btn_save_slot).setOnClickListener {
-            val cur = Prefs.getColor(this)
-            val idx = (0..2).firstOrNull { Prefs.getSlot(this, it) < 0 } ?: 0
-            Prefs.setSlot(this, idx, cur)
+            val sel = Prefs.getSelectedPreset(this)
+            val target = if (sel >= 0) sel else (0 until 3).firstOrNull { Prefs.isPresetEmpty(this, it) } ?: 0
+            Prefs.setPreset(this, target, Prefs.getColor(this))
+            Prefs.setSelectedPreset(this, target)
             buildPresets()
-            Toast.makeText(this, "已保存到槽${idx + 1}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "已保存到预设${target + 1}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -117,40 +130,56 @@ class MainActivity : AppCompatActivity() {
         tvOpacity.text = "$o%"
         swAutoNight.isChecked = Prefs.isAutoNight(this)
         swHideFab.isChecked = Prefs.isHideFab(this)
-        val (h, s, l) = ColorUtil.rgbToHsl(Prefs.getColor(this))
-        seekH.progress = h; seekS.progress = s; seekL.progress = l
+        if (!hslDragging) {
+            val (h, s, l) = ColorUtil.rgbToHsl(Prefs.getColor(this))
+            seekH.progress = h; seekS.progress = s; seekL.progress = l
+        }
     }
 
-    /** 预设区：仅保留一个「黑」，再加 3 个用户槽位（点=应用，长按=存当前色）。 */
+    /** 预设区：黑 + 2 个用户槽（共 3 个，全部可修改）。点=应用并选中；长按=把当前色存入该预设。 */
     private fun buildPresets() {
         llPresets.removeAllViews()
-        val black = Button(this).apply {
-            text = "黑"
-            setOnClickListener { applyColor(Color.BLACK) }
-        }
-        llPresets.addView(black)
-        for (i in 0..2) {
-            val col = Prefs.getSlot(this, i)
-            val btn = Button(this).apply {
-                text = if (col >= 0) "槽${i + 1}" else "＋"
-                if (col >= 0) setBackgroundColor(col)
-                setOnClickListener { if (col >= 0) applyColor(col) }
-                setOnLongClickListener {
-                    Prefs.setSlot(this@MainActivity, i, Prefs.getColor(this@MainActivity))
-                    buildPresets()
-                    Toast.makeText(this@MainActivity, "已保存到槽${i + 1}", Toast.LENGTH_SHORT).show()
-                    true
+        val density = resources.displayMetrics.density
+        val sel = Prefs.getSelectedPreset(this)
+        for (i in 0 until 3) {
+            val col = Prefs.getPreset(this, i)
+            val btn = Button(this)
+            val lp = LinearLayout.LayoutParams(0, (48 * density).toInt(), 1f).apply {
+                setMargins((4 * density).toInt(), 0, (4 * density).toInt(), 0)
+            }
+            btn.layoutParams = lp
+            val bg = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = (8 * density)
+                if (col == null) {
+                    setColor(0xFF333333.toInt())
+                    btn.text = "＋"
+                } else {
+                    setColor(col)
+                    btn.text = ""
                 }
+                if (i == sel) setStroke((4 * density).toInt(), 0xFFFFD700.toInt())
+                else setStroke((2 * density).toInt(), 0xFF000000.toInt())
+            }
+            btn.background = bg
+            btn.setOnClickListener {
+                val c = Prefs.getPreset(this@MainActivity, i) ?: return@setOnClickListener
+                Prefs.setColor(this@MainActivity, c)
+                Prefs.setSelectedPreset(this@MainActivity, i)
+                val (hh, ss, ll) = ColorUtil.rgbToHsl(c)
+                seekH.progress = hh; seekS.progress = ss; seekL.progress = ll
+                applyToService()
+                buildPresets()
+            }
+            btn.setOnLongClickListener {
+                Prefs.setPreset(this@MainActivity, i, Prefs.getColor(this@MainActivity))
+                Prefs.setSelectedPreset(this@MainActivity, i)
+                buildPresets()
+                Toast.makeText(this@MainActivity, "已保存到预设${i + 1}", Toast.LENGTH_SHORT).show()
+                true
             }
             llPresets.addView(btn)
         }
-    }
-
-    private fun applyColor(c: Int) {
-        Prefs.setColor(this, c)
-        val (h, s, l) = ColorUtil.rgbToHsl(c)
-        seekH.progress = h; seekS.progress = s; seekL.progress = l
-        applyToService()
     }
 
     private fun requestOverlay() {

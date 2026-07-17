@@ -9,7 +9,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.animation.ValueAnimator
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.Handler
@@ -63,6 +65,25 @@ class OverlayService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private var autoNightRunnable: Runnable? = null
     private var panelRefs: PanelRefs? = null
+    private var fabSize = 0
+    private var hslDragging = false
+    private var presetContainer: LinearLayout? = null
+
+    private val hslListener = object : SeekBar.OnSeekBarChangeListener {
+        override fun onProgressChanged(seekBar: SeekBar?, p: Int, fromUser: Boolean) {
+            if (!fromUser) return
+            val refs = panelRefs ?: return
+            hslDragging = true
+            Prefs.setColor(this@OverlayService, ColorUtil.hslToRgb(refs.h.progress, refs.s.progress, refs.l.progress))
+            applyAll()
+        }
+        override fun onStartTrackingTouch(seekBar: SeekBar?) { hslDragging = true }
+        override fun onStopTrackingTouch(seekBar: SeekBar?) {
+            hslDragging = false
+            Prefs.setSelectedPreset(this@OverlayService, -1)
+            presetContainer?.let { buildPresetButtons(it) }
+        }
+    }
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(c: Context?, i: Intent?) {
@@ -150,6 +171,7 @@ class OverlayService : Service() {
     // ---- 悬浮按钮（可拖动、靠边隐藏） ----
     private fun createFab() {
         val size = (56 * resources.displayMetrics.density).toInt()
+        fabSize = size
         fab = LayoutInflater.from(this).inflate(R.layout.fab_button, null)
         fabIcon = fab?.findViewById(R.id.fab_icon)
         fabParams = WindowManager.LayoutParams(
@@ -161,8 +183,8 @@ class OverlayService : Service() {
 
         val inset = (24 * resources.displayMetrics.density).toInt()
         val x = Prefs.getFabX(this); val y = Prefs.getFabY(this)
-        fabParams!!.x = if (x < 0) (screenW() - size - inset) else x
-        fabParams!!.y = if (y < 0) (screenH() / 2) else y
+        fabParams!!.x = if (x == -1) (screenW() - size - inset) else x.coerceIn(-size, screenW() - size)
+        fabParams!!.y = if (y == -1) (screenH() / 2) else y.coerceIn(0, screenH() - size)
 
         fab!!.setOnTouchListener(FabTouchListener(size))
         wm.addView(fab, fabParams)
@@ -173,7 +195,7 @@ class OverlayService : Service() {
         private var paramX = 0; private var paramY = 0
         private var isClick = true
         private var longFired = false
-        private val longPress = Runnable { longFired = true; openPanel() }
+        private val longPress = Runnable { longFired = true; toggleMask() }
 
         override fun onTouch(v: View, e: MotionEvent): Boolean {
             when (e.action) {
@@ -197,18 +219,46 @@ class OverlayService : Service() {
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     handler.removeCallbacks(longPress)
                     if (longFired) { longFired = false; return true }
-                    if (isClick) toggleMask()
-                    else {
-                        // 自由悬停：夹紧到屏幕内并保存，不再自动收边
-                        fabParams!!.x = fabParams!!.x.coerceIn(0, screenW() - size)
-                        fabParams!!.y = fabParams!!.y.coerceIn(0, screenH() - size)
-                        wm.updateViewLayout(fab, fabParams)
-                        Prefs.setFabPos(this@OverlayService, fabParams!!.x, fabParams!!.y)
+                    if (isClick) {
+                        openPanel()
+                    } else {
+                        val cx = fabParams!!.x + size / 2
+                        val edge = (size * 0.6f).toInt()
+                        when {
+                            cx < edge -> snapToEdge(true)
+                            cx > screenW() - edge -> snapToEdge(false)
+                            else -> {
+                                fabParams!!.x = fabParams!!.x.coerceIn(0, screenW() - size)
+                                fabParams!!.y = fabParams!!.y.coerceIn(0, screenH() - size)
+                                wm.updateViewLayout(fab, fabParams)
+                                Prefs.setFabPos(this@OverlayService, fabParams!!.x, fabParams!!.y)
+                            }
+                        }
                     }
                     return true
                 }
             }
             return false
+        }
+    }
+
+    private fun snapToEdge(left: Boolean) {
+        val tab = (fabSize * 0.35f).toInt()
+        val from = fabParams!!.x
+        val target = if (left) -fabSize + tab else screenW() - tab
+        fabParams!!.y = fabParams!!.y.coerceIn(0, screenH() - fabSize)
+        Prefs.setFabPos(this, target, fabParams!!.y)
+        animateX(from, target)
+    }
+
+    private fun animateX(from: Int, to: Int) {
+        ValueAnimator.ofInt(from, to).apply {
+            duration = 250
+            addUpdateListener {
+                fabParams!!.x = it.animatedValue as Int
+                wm.updateViewLayout(fab, fabParams)
+            }
+            start()
         }
     }
 
@@ -246,6 +296,9 @@ class OverlayService : Service() {
         val hideFab = root.findViewById<Switch>(R.id.sw_hidefab)
         val close = root.findViewById<Button>(R.id.btn_close)
 
+        panelRefs = PanelRefs(master, opacity, opacityVal, autoNight, hideFab, h, s, l)
+        presetContainer = presets
+
         opacity.max = 90
         master.setOnCheckedChangeListener { _, c -> Prefs.setEnabled(this, c); applyAll() }
         opacity.setOnSeekBarChangeListener(simple { p ->
@@ -260,55 +313,65 @@ class OverlayService : Service() {
         close.setOnClickListener { closePanel() }
         root.findViewById<Button>(R.id.btn_exit).setOnClickListener { stopSelf() }
 
-        val hsl = simple { _ ->
-            Prefs.setColor(this, ColorUtil.hslToRgb(h.progress, s.progress, l.progress))
-            applyAll()
-        }
-        h.setOnSeekBarChangeListener(hsl)
-        s.setOnSeekBarChangeListener(hsl)
-        l.setOnSeekBarChangeListener(hsl)
+        h.setOnSeekBarChangeListener(hslListener)
+        s.setOnSeekBarChangeListener(hslListener)
+        l.setOnSeekBarChangeListener(hslListener)
 
-        buildPresetButtons(presets, h, s, l)
+        buildPresetButtons(presets)
         saveSlot.setOnClickListener {
-            val cur = Prefs.getColor(this)
-            val idx = (0..2).firstOrNull { Prefs.getSlot(this, it) < 0 } ?: 0
-            Prefs.setSlot(this, idx, cur)
-            buildPresetButtons(presets, h, s, l)
-            Toast.makeText(this, "已保存到槽${idx + 1}", Toast.LENGTH_SHORT).show()
+            val sel = Prefs.getSelectedPreset(this)
+            val target = if (sel >= 0) sel else (0 until 3).firstOrNull { Prefs.isPresetEmpty(this, it) } ?: 0
+            Prefs.setPreset(this, target, Prefs.getColor(this))
+            Prefs.setSelectedPreset(this, target)
+            buildPresetButtons(presets)
+            Toast.makeText(this, "已保存到预设${target + 1}", Toast.LENGTH_SHORT).show()
         }
-
-        panelRefs = PanelRefs(master, opacity, opacityVal, autoNight, hideFab, h, s, l)
     }
 
-    /** 预设区：仅保留一个「黑」，再加 3 个用户槽位（点=应用，长按=存当前色）。 */
-    private fun buildPresetButtons(container: LinearLayout, h: SeekBar, s: SeekBar, l: SeekBar) {
+    /** 预设区：黑 + 2 个用户槽（共 3 个，全部可修改）。点=应用并选中；长按=把当前色存入该预设。 */
+    private fun buildPresetButtons(container: LinearLayout) {
         container.removeAllViews()
-        val black = Button(this).apply {
-            text = "黑"
-            setOnClickListener { applyColor(Color.BLACK, h, s, l) }
-        }
-        container.addView(black)
-        for (i in 0..2) {
-            val col = Prefs.getSlot(this, i)
-            val btn = Button(this).apply {
-                text = if (col >= 0) "槽${i + 1}" else "＋"
-                if (col >= 0) setBackgroundColor(col)
-                setOnClickListener { if (col >= 0) applyColor(col, h, s, l) }
-                setOnLongClickListener {
-                    Prefs.setSlot(this@OverlayService, i, Prefs.getColor(this@OverlayService))
-                    buildPresetButtons(container, h, s, l)
-                    Toast.makeText(this@OverlayService, "已保存到槽${i + 1}", Toast.LENGTH_SHORT).show()
-                    true
+        val density = resources.displayMetrics.density
+        val sel = Prefs.getSelectedPreset(this)
+        for (i in 0 until 3) {
+            val col = Prefs.getPreset(this, i)
+            val btn = Button(this)
+            val lp = LinearLayout.LayoutParams(0, (48 * density).toInt(), 1f).apply {
+                setMargins((4 * density).toInt(), 0, (4 * density).toInt(), 0)
+            }
+            btn.layoutParams = lp
+            val bg = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = (8 * density)
+                if (col == null) {
+                    setColor(0xFF333333.toInt())
+                    btn.text = "＋"
+                } else {
+                    setColor(col)
+                    btn.text = ""
                 }
+                if (i == sel) setStroke((4 * density).toInt(), 0xFFFFD700.toInt())
+                else setStroke((2 * density).toInt(), 0xFF000000.toInt())
+            }
+            btn.background = bg
+            btn.setOnClickListener {
+                val c = Prefs.getPreset(this@OverlayService, i) ?: return@setOnClickListener
+                val refs = panelRefs ?: return@setOnClickListener
+                Prefs.setColor(this@OverlayService, c)
+                Prefs.setSelectedPreset(this@OverlayService, i)
+                syncHsl(c, refs.h, refs.s, refs.l)
+                applyAll()
+                buildPresetButtons(container)
+            }
+            btn.setOnLongClickListener {
+                Prefs.setPreset(this@OverlayService, i, Prefs.getColor(this@OverlayService))
+                Prefs.setSelectedPreset(this@OverlayService, i)
+                buildPresetButtons(container)
+                Toast.makeText(this@OverlayService, "已保存到预设${i + 1}", Toast.LENGTH_SHORT).show()
+                true
             }
             container.addView(btn)
         }
-    }
-
-    private fun applyColor(c: Int, h: SeekBar, s: SeekBar, l: SeekBar) {
-        Prefs.setColor(this, c)
-        syncHsl(c, h, s, l)
-        applyAll()
     }
 
     private fun updatePanelUI() {
@@ -319,7 +382,7 @@ class OverlayService : Service() {
         refs.opacityVal.text = "$o%"
         refs.autoNight.isChecked = Prefs.isAutoNight(this)
         refs.hideFab.isChecked = Prefs.isHideFab(this)
-        syncHsl(Prefs.getColor(this), refs.h, refs.s, refs.l)
+        if (!hslDragging) syncHsl(Prefs.getColor(this), refs.h, refs.s, refs.l)
     }
 
     private fun syncHsl(col: Int, h: SeekBar, s: SeekBar, l: SeekBar) {

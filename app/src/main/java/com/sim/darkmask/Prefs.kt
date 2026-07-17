@@ -18,9 +18,11 @@ object Prefs {
     const val KEY_HIDE_FAB = "hide_fab"
     const val KEY_FAB_X = "fab_x"
     const val KEY_FAB_Y = "fab_y"
-    const val KEY_SLOT0 = "slot0"
-    const val KEY_SLOT1 = "slot1"
-    const val KEY_SLOT2 = "slot2"
+    const val PRESET_COUNT = 3
+    const val KEY_PRESET0 = "preset0"
+    const val KEY_PRESET1 = "preset1"
+    const val KEY_PRESET2 = "preset2"
+    const val KEY_SELECTED_PRESET = "selected_preset"
 
     private fun sp(ctx: Context): SharedPreferences =
         ctx.getSharedPreferences(NAME, Context.MODE_PRIVATE)
@@ -45,12 +47,22 @@ object Prefs {
     fun setFabPos(ctx: Context, x: Int, y: Int) =
         sp(ctx).edit().putInt(KEY_FAB_X, x).putInt(KEY_FAB_Y, y).apply()
 
-    /** 用户存储槽位（0..2）。-1 表示空。 */
-    fun getSlot(ctx: Context, i: Int) = sp(ctx).getInt(slotKey(i), -1)
-    fun setSlot(ctx: Context, i: Int, c: Int) =
-        sp(ctx).edit().putInt(slotKey(i), c).apply()
+    /** 预设颜色：0=黑(默认可改)，1/2=用户槽。null 表示空。 */
+    fun getPreset(ctx: Context, i: Int): Int? {
+        val raw = sp(ctx).getString(presetKey(i), null)
+        if (raw == null) return if (i == 0) Color.BLACK else null
+        return raw.toIntOrNull()
+    }
+    fun setPreset(ctx: Context, i: Int, c: Int) =
+        sp(ctx).edit().putString(presetKey(i), c.toString()).apply()
+    fun isPresetEmpty(ctx: Context, i: Int) = getPreset(ctx, i) == null
 
-    private fun slotKey(i: Int) = when (i) {
-        0 -> KEY_SLOT0; 1 -> KEY_SLOT1; else -> KEY_SLOT2
+    /** 当前选中的预设下标（-1 表示无）。 */
+    fun getSelectedPreset(ctx: Context) = sp(ctx).getInt(KEY_SELECTED_PRESET, 0)
+    fun setSelectedPreset(ctx: Context, i: Int) =
+        sp(ctx).edit().putInt(KEY_SELECTED_PRESET, i).apply()
+
+    private fun presetKey(i: Int) = when (i) {
+        0 -> KEY_PRESET0; 1 -> KEY_PRESET1; else -> KEY_PRESET2
     }
 }

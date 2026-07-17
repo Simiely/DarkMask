@@ -156,6 +156,14 @@
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="点按=应用并选中 · 长按=存入当前颜色"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
+
             <LinearLayout
                 android:id="@+id/ll_presets"
                 android:layout_width="match_parent"
@@ -242,7 +250,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:layout_marginBottom="24dp"
-            android:text="悬浮按钮：点按=开关蒙版，长按=打开控制面板，拖动可自由悬停（不再自动收边）。"
+            android:text="悬浮按钮：点按=打开控制面板，长按=启用/关闭蒙版，拖动可自由悬停（靠近边缘自动收边）。"
             android:textColor="@color/text_secondary"
             android:textSize="12sp" />
     </LinearLayout>
