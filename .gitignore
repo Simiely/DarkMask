@@ -7,3 +7,7 @@
 /captures
 .externalNativeBuild
 .cxx
+
+# Never commit the plaintext debug keystore. Only the AES-encrypted zip
+# (keystore/debug-keystore.zip) is tracked; CI decrypts it with a Secret.
+keystore/debug.keystore

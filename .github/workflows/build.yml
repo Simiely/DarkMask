@@ -54,24 +54,30 @@ jobs:
             git push || echo "push skipped"
           fi
 
-      # Ensure a stable debug keystore exists so every build shares one signature.
-      # On the first run it is generated and committed back ([skip ci]); later runs reuse it.
-      - name: Generate fixed debug keystore if missing
+      # The fixed debug keystore is stored ONLY as an AES-256 encrypted zip
+      # (keystore/debug-keystore.zip). The password lives in the repo Secret
+      # KEYSTORE_ZIP_PASSWORD, never in the repo. Decrypt it here so every build
+      # shares one signature without shipping the plaintext keystore.
+      - name: Decrypt debug keystore from encrypted zip
+        env:
+          KS_PW: ${{ secrets.KEYSTORE_ZIP_PASSWORD }}
         run: |
-          if [ ! -f keystore/debug.keystore ]; then
-            mkdir -p keystore
-            keytool -genkeypair -v \
-              -keystore keystore/debug.keystore \
-              -storepass android -keypass android \
-              -alias androiddebugkey \
-              -keyalg RSA -keysize 2048 -validity 10000 \
-              -dname "CN=Android Debug,O=Android,C=US"
-            git config user.email "actions@github.com"
-            git config user.name "github-actions[bot]"
-            git add -f keystore/debug.keystore
-            git commit -m "ci: add fixed debug keystore [skip ci]" || echo "nothing to commit"
-            git push || echo "push skipped"
+          if [ -z "$KS_PW" ]; then
+            echo "ERROR: repo secret KEYSTORE_ZIP_PASSWORD is not set."
+            echo "Add it under Settings > Secrets and variables > Actions."
+            exit 1
           fi
+          if [ ! -f keystore/debug-keystore.zip ]; then
+            echo "ERROR: keystore/debug-keystore.zip is missing from the repo."
+            exit 1
+          fi
+          mkdir -p keystore
+          if ! command -v 7z >/dev/null 2>&1; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full
+          fi
+          7z x -y -p"$KS_PW" -okeystore keystore/debug-keystore.zip
+          test -f keystore/debug.keystore || { echo "decrypt failed: debug.keystore not found"; exit 1; }
+          echo "debug keystore decrypted OK"
 
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon
