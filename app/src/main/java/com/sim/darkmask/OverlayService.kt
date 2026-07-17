@@ -417,7 +417,10 @@ class OverlayService : Service() {
                 if (presetTapCount[i] >= 3) {
                     presetTapCount[i] = 0
                     Prefs.setPreset(this@OverlayService, i, android.graphics.Color.BLACK)
+                    Prefs.setColor(this@OverlayService, android.graphics.Color.BLACK)
                     Prefs.setSelectedPreset(this@OverlayService, i)
+                    applyAll()
+                    panelRefs?.let { syncHsl(android.graphics.Color.BLACK, it.h, it.s, it.l) }
                     buildPresetButtons(container)
                     Toast.makeText(this@OverlayService, "已重置为黑色", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener

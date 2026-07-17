@@ -194,7 +194,10 @@ class MainActivity : AppCompatActivity() {
                 if (presetTapCount[i] >= 3) {
                     presetTapCount[i] = 0
                     Prefs.setPreset(this@MainActivity, i, android.graphics.Color.BLACK)
+                    Prefs.setColor(this@MainActivity, android.graphics.Color.BLACK)
                     Prefs.setSelectedPreset(this@MainActivity, i)
+                    seekH.progress = 0; seekS.progress = 0; seekL.progress = 0
+                    applyToService()
                     buildPresets()
                     Toast.makeText(this@MainActivity, "已重置为黑色", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
