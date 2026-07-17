@@ -121,7 +121,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:text="保存当前颜色到选中预设"
+        android:text="保存颜色预设"
         android:textColor="@color/btn_text" />
 
     <Switch
