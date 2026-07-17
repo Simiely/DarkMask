@@ -1,91 +1,58 @@
-# 深色蒙版（DarkMask）· 适配澎湃 OS 3
+# 夜深模式
 
-一个在小米/红米 **HyperOS 3（Android 15/16）** 上运行的全屏降亮蒙版工具：
-靠边自动隐藏的悬浮按钮控制开关，支持任意颜色（默认最深黑）与 **5%–95% 无极透明度**，
-通过前台服务 + 常驻通知运行（不后台保活、不自启动）。
+全屏降亮护眼工具。在前台绘制可调节透明度与颜色的蒙版，覆盖整个屏幕（包括状态栏与刘海区），有效降低屏幕亮度，适合夜间使用。
 
----
+## 功能
 
-## 一、已实现功能（任务清单 · 已完成）
+- **全屏蒙版** — 覆盖状态栏与刘海，支持自定义颜色 × 透明度（5%–95%）
+- **悬浮按钮** — 点按弹出控制面板，长按切换蒙版开关，可拖动/靠边吸附
+- **3 个颜色预设** — 快速切换常用颜色；长按存当前色，双击/三击重置黑色
+- **HSL 调色** — 色相(0–360) × 饱和度(0–100) × 亮度(0–100)，调色时预设实时对分预览
+- **通知栏快捷操作** — 常驻通知置顶显示，支持切换/设置/关闭
+- **下拉快捷磁贴** — 点按即可开关蒙版
+- **深色界面** — 适配夜间使用场景
 
-| # | 功能 | 说明 |
-|---|------|------|
-| 1 | 全屏降亮蒙版 | `TYPE_APPLICATION_OVERLAY` 全屏绘制，`FLAG_NOT_TOUCHABLE` 触摸穿透，不影响正常使用手机 |
-| 2 | 靠边隐藏悬浮按钮 | 拖动到左/右边缘自动缩进，仅留 35% 作为「把手」，点按即可唤回 |
-| 3 | 一键开关蒙版 | 点按悬浮钮 = 开/关；长按悬浮钮 = 打开控制面板 |
-| 4 | 默认最深黑色 | 默认颜色 `#000000`，预设 纯黑/暖光/护眼/夜红/深蓝 + RGB 自定义 |
-| 5 | 5%–95% 无极透明度 | SeekBar 滑轨，`max=90` 映射为 `进度+5`，杜绝 <5% 看不见 / >95% 刺眼 |
-| 6 | 前台服务（常驻通知） | `foregroundServiceType="specialUse"` + 常驻通知 |
-| 7 | 通知栏快捷磁贴 | `MaskTileService` 一键切换，状态实时同步 |
-| 8 | 隐藏悬浮按钮 | 开关：仅用通知/磁贴/主界面控制 |
-| 9 | 权限引导 | 主界面显示悬浮窗/通知状态，一键跳转设置 |
-| 10 | 位置记忆 | 悬浮钮位置写入 `SharedPreferences`，重启后恢复 |
-| 11 | 控制面板退出 | 面板内「退出程序」按钮，彻底停止服务、清除蒙版与通知，无残留 |
+## 安装
 
----
+从 [GitHub Releases](https://github.com/Simiely/DarkMask/releases) 下载最新 `yeshen-mode-*.apk`。
 
-## 二、优化与补充功能（任务清单 · 待做 / 可扩展）
+首次安装需授予：
+1. **悬浮窗权限** — 点击主界面「悬浮窗权限」按钮跳转开启
+2. **通知权限**（Android 13+）— 点击「启动蒙版」自动弹出申请
 
-- [ ] **应用白名单**：基于 `UsageStatsManager` 检测前台 App，对指定 App（如相机、相册）自动关闭蒙版
-- [ ] **亮度联动**：系统亮度低于阈值时自动加深蒙版（需读取系统亮度）
-- [ ] **多档预设一键切换**：阅读 / 观影 / 睡眠 三套参数，通知栏或悬浮菜单快捷切换
-- [ ] **悬浮钮外观自定义**：大小、透明度、图标、是否显示「当前透明度」角标
-- [ ] **边缘手势**：从屏幕边缘向内滑唤出控制面板（替代长按）
-- [ ] **防误关**：磁贴/通知二次确认，避免误触关掉蒙版导致黑夜刺眼
-- [ ] **多语言 / 无障碍**：跟随系统、TalkBack 描述
-- [ ] **崩溃兜底**：`WindowManager` 添加失败时降级提示，而非白屏
+之后所有版本可直接覆盖安装（固定签名）。
 
----
+## 使用
 
-## 三、运行说明
+| 操作 | 效果 |
+|---|---|
+| 点按悬浮按钮 | 打开/关闭控制面板 |
+| 长按悬浮按钮 | 切换蒙版开关 |
+| 拖动悬浮按钮 | 自由移动，靠近屏幕边缘自动收边 |
+| 点击预设色块 | 应用该颜色并选中 |
+| 长按预设色块 | 把当前颜色存入该预设 |
+| 快速 3 次点击预设 | 将该预设重置为纯黑 |
+| 点击「保存颜色预设」 | 将当前颜色存入选中的预设 |
 
-- 本应用**不后台保活、不自启动**：只有你点「启动蒙版」时才运行前台服务，点控制面板/通知的「退出」即彻底停止、无残留。
-- 首次进入按提示授予「悬浮窗」权限（主界面按钮跳转），再点「启动蒙版」。
-- 常驻通知用于维持前台服务，点通知主体可弹出控制面板。
+## 构建
 
----
-
-## 四、构建与运行
-
-### 方式 A：Android Studio（推荐）
-1. 用 Android Studio 打开 `DarkMask/` 根目录（会自动生成 Gradle Wrapper 并下载依赖）。
-2. 连接已开启「USB 调试」的 HyperOS 3 设备，或启动模拟器。
-3. 菜单 `Build → Make Project`，无误后 `Run 'app'`。
-4. 首次进入按提示授予「悬浮窗」权限，点「启动蒙版」。
-
-### 方式 B：命令行（需本地已装 Android SDK + Gradle）
 ```bash
+git clone https://github.com/Simiely/DarkMask.git
 cd DarkMask
-./gradlew assembleDebug        # 生成 app/build/outputs/apk/debug/app-debug.apk
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+./gradlew assembleDebug
 ```
 
-### 环境要求
-- `compileSdk = 35` / `targetSdk = 35`（Android 15，适配 HyperOS 3）
-- `minSdk = 23`（Android 6.0，悬浮窗权限起点）
-- Kotlin 1.9.24 / AGP 8.5.2 / JDK 17
-- 依赖：`androidx.core-ktx`、`appcompat`、`material(Material3)`
+APK 输出至 `app/build/outputs/apk/debug/`。
 
----
+CI 使用 GitHub Actions 自动构建（JDK 17 + Android SDK 35 + Gradle 8.9）。每次推送 `main` 自动触发，产物可在 Actions 页面下载。
 
-## 五、工程结构
+## 技术栈
 
-```
-DarkMask/
-├── app/build.gradle.kts
-├── settings.gradle.kts
-├── gradle.properties
-└── app/src/main/
-    ├── AndroidManifest.xml
-    ├── java/com/sim/darkmask/
-    │   ├── MainActivity.kt        # 权限引导 + 完整设置
-    │   ├── OverlayService.kt      # 前台服务：蒙版 + 悬浮钮 + 控制面板
-    │   ├── MaskTileService.kt     # 通知栏快捷磁贴
-    │   └── Prefs.kt               # 轻量偏好存储
-    └── res/
-        ├── layout/  (activity_main / fab_button / control_panel)
-        ├── drawable/ (图标 + 形状)
-        └── values/  (strings / colors / themes)
-```
+- Kotlin 1.9.24 · AGP 8.5.2 · compileSdk 35 · minSdk 23
+- 纯前台服务实现（`OverlayService`），无后台进程
+- 全屏蒙版使用 `TYPE_APPLICATION_OVERLAY` + `WindowManager`
+- 预设颜色存储使用 `SharedPreferences`
 
-> 配色沿用你偏好的 **哔哩哔哩粉 `#FB7299`** + 深色科技风。
+## 许可
+
+MIT
