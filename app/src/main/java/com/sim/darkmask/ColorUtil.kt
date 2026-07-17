@@ -1,8 +1,8 @@
 package com.sim.darkmask
 
 import android.graphics.Color
-import kotlin.math.max
-import kotlin.math.min
+import kotlin.math.maxOf
+import kotlin.math.minOf
 import kotlin.math.roundToInt
 
 /**
@@ -16,8 +16,8 @@ object ColorUtil {
         val r = Color.red(color) / 255f
         val g = Color.green(color) / 255f
         val b = Color.blue(color) / 255f
-        val mx = max(r, g, b)
-        val mn = min(r, g, b)
+        val mx = maxOf(r, g, b)
+        val mn = minOf(r, g, b)
         val l = (mx + mn) / 2f
         var h = 0f
         var s = 0f
