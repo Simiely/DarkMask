@@ -121,8 +121,8 @@ class OverlayService : Service() {
     private fun buildNotification(): Notification {
         val chId = "darkmask_channel"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val ch = NotificationChannel(chId, "深色蒙版", NotificationManager.IMPORTANCE_LOW)
-            ch.description = "常驻以支撑蒙版服务"
+            val ch = NotificationChannel(chId, "夜深模式", NotificationManager.IMPORTANCE_LOW)
+            ch.description = "常驻以支撑服务"
             (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch)
         }
         val togglePi = PendingIntent.getBroadcast(
@@ -137,7 +137,7 @@ class OverlayService : Service() {
             piFlags())
         val on = Prefs.isEnabled(this)
         return NotificationCompat.Builder(this, chId)
-            .setContentTitle("深色蒙版${if (on) "· 已开启" else "· 已关闭"}")
+            .setContentTitle("夜深模式${if (on) "· 已开启" else "· 已关闭"}")
             .setContentText("点击弹出控制面板 · 可切换蒙版")
             .setSmallIcon(R.drawable.ic_mask)
             .setOngoing(true)
