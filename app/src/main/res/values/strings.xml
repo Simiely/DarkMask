@@ -1,6 +1,4 @@
 <resources>
     <string name="app_name">深色蒙版</string>
     <string name="tile_label">深色蒙版</string>
-    <string name="guide_title">HyperOS 3 保活指引</string>
-    <string name="guide_text">小米/红米在 HyperOS 3 下会激进杀后台，为保证运行时蒙版不被回收，请：\n\n1. 授予「悬浮窗」权限（本页按钮跳转）。\n2. 设置 → 应用设置 → 深色蒙版 → 省电策略设为「无限制」。\n3. 多任务界面长按本应用 → 锁定（🔒），防止被划掉。\n4. 运行时不会被系统回收；退出请点控制面板/通知的「退出」，服务彻底停止、不留残留（无需开启「自启动」）。</string>
 </resources>

@@ -34,7 +34,7 @@ import java.util.Calendar
 
 /**
  * 前台服务：负责绘制全屏降亮蒙版 + 可拖动/靠边隐藏的悬浮按钮 + 控制面板。
- * 用前台服务保活，避免被 HyperOS 杀后台。
+ * 前台服务常驻：支撑全屏蒙版与可拖动的悬浮按钮。
  */
 class OverlayService : Service() {
 
@@ -43,6 +43,7 @@ class OverlayService : Service() {
         const val ACTION_STOP = "com.sim.darkmask.ACTION_STOP"
         const val ACTION_OPEN = "com.sim.darkmask.ACTION_OPEN"
         const val ACTION_APPLY = "com.sim.darkmask.ACTION_APPLY"
+        const val ACTION_PANEL = "com.sim.darkmask.ACTION_PANEL"
         private const val NOTIF_ID = 1001
 
         /** 服务是否正在运行（用于 MainActivity 判断） */
@@ -92,6 +93,7 @@ class OverlayService : Service() {
                 ACTION_STOP -> stopSelf()
                 ACTION_OPEN -> openSettings()
                 ACTION_APPLY -> applyAll()
+                ACTION_PANEL -> showPanelExternal()
             }
         }
     }
@@ -105,6 +107,7 @@ class OverlayService : Service() {
         val f = IntentFilter().apply {
             addAction(ACTION_TOGGLE); addAction(ACTION_STOP)
             addAction(ACTION_OPEN); addAction(ACTION_APPLY)
+            addAction(ACTION_PANEL)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
             registerReceiver(receiver, f, RECEIVER_NOT_EXPORTED)
@@ -122,19 +125,27 @@ class OverlayService : Service() {
         val chId = "darkmask_channel"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val ch = NotificationChannel(chId, "深色蒙版", NotificationManager.IMPORTANCE_LOW)
-            ch.description = "常驻以保活蒙版服务"
+            ch.description = "常驻以支撑蒙版服务"
             (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch)
         }
-        val togglePi = PendingIntent.getBroadcast(this, 1, Intent(ACTION_TOGGLE), piFlags())
+        val togglePi = PendingIntent.getBroadcast(
+            this, 1, Intent(ACTION_TOGGLE).setPackage(packageName), piFlags())
         val openPi = PendingIntent.getActivity(this, 2, Intent(this, MainActivity::class.java), piFlags())
-        val stopPi = PendingIntent.getBroadcast(this, 3, Intent(ACTION_STOP), piFlags())
+        val stopPi = PendingIntent.getBroadcast(
+            this, 3, Intent(ACTION_STOP).setPackage(packageName), piFlags())
+        // 点击通知主体：经透明中转 Activity 弹出悬浮控制面板（并自动折叠通知栏）。
+        val panelPi = PendingIntent.getActivity(
+            this, 4,
+            Intent(this, PanelLauncherActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            piFlags())
         val on = Prefs.isEnabled(this)
         return NotificationCompat.Builder(this, chId)
             .setContentTitle("深色蒙版${if (on) "· 已开启" else "· 已关闭"}")
-            .setContentText("点击打开设置 · 可切换蒙版")
+            .setContentText("点击弹出控制面板 · 可切换蒙版")
             .setSmallIcon(R.drawable.ic_mask)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
+            .setContentIntent(panelPi)
             .addAction(R.drawable.ic_toggle, "切换", togglePi)
             .addAction(R.drawable.ic_settings, "设置", openPi)
             .addAction(R.drawable.ic_close, "关闭", stopPi)
@@ -281,6 +292,11 @@ class OverlayService : Service() {
     private fun closePanel() {
         panel?.let { wm.removeView(it) }
         panel = null
+    }
+
+    /** 来自通知点击（PanelLauncherActivity）的"打开控制面板"请求。 */
+    private fun showPanelExternal() {
+        if (panel == null) openPanel()
     }
 
     private fun wirePanel(root: View) {

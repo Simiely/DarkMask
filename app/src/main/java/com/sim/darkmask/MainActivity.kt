@@ -2,7 +2,6 @@ package com.sim.darkmask
 
 import android.Manifest
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -24,13 +23,12 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
 /**
- * 主界面：权限引导 + 完整设置 + HyperOS 3 保活指引。
+ * 主界面：权限引导 + 完整设置。
  * 设置变更会实时通过广播同步给运行中的 OverlayService。
  */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var statusOverlay: TextView
-    private lateinit var statusBattery: TextView
     private lateinit var statusNotif: TextView
     private lateinit var btnToggle: Button
     private lateinit var seekOpacity: SeekBar
@@ -48,7 +46,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         statusOverlay = findViewById(R.id.tv_status_overlay)
-        statusBattery = findViewById(R.id.tv_status_battery)
         statusNotif = findViewById(R.id.tv_status_notif)
         btnToggle = findViewById(R.id.btn_toggle)
         seekOpacity = findViewById(R.id.seek_opacity)
@@ -61,8 +58,6 @@ class MainActivity : AppCompatActivity() {
         llPresets = findViewById(R.id.ll_presets)
 
         findViewById<Button>(R.id.btn_perm_overlay).setOnClickListener { requestOverlay() }
-        findViewById<Button>(R.id.btn_perm_battery).setOnClickListener { requestBattery() }
-        findViewById<Button>(R.id.btn_perm_xiaomi).setOnClickListener { openXiaomi() }
         btnToggle.setOnClickListener { toggleService() }
 
         seekOpacity.max = 90
@@ -111,11 +106,6 @@ class MainActivity : AppCompatActivity() {
     private fun refreshStatus() {
         statusOverlay.text = "悬浮窗：" +
             if (Settings.canDrawOverlays(this)) "✅ 已授予" else "❌ 未授予（需手动开启）"
-        val pm = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
-        statusBattery.text = "电池优化：" +
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                pm.isIgnoringBatteryOptimizations(packageName)
-            ) "✅ 已豁免" else "❌ 未豁免（建议关闭）"
         statusNotif.text = "通知：" +
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
                 ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
@@ -189,33 +179,6 @@ class MainActivity : AppCompatActivity() {
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             )
         } else Toast.makeText(this, "悬浮窗权限已授予", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun requestBattery() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val pm = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
-            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-                try {
-                    startActivity(
-                        Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-                            Uri.parse("package:$packageName")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    )
-                } catch (_: Exception) { }
-            } else Toast.makeText(this, "已豁免电池优化", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun openXiaomi() {
-        val candidates = listOf(
-            Intent().setClassName(
-                "com.miui.securitycenter", "com.miui.permcenter.autoset.AutoSetActivity"),
-            Intent().setClassName(
-                "com.miui.securitycenter", "com.miui.permcenter.permissions.AppPermissionsEditorActivity"),
-            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
-        )
-        for (it in candidates) {
-            try { startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); return } catch (_: Exception) { }
-        }
     }
 
     private fun toggleService() {
