@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>夜深模式 — 全屏降亮护眼</title>
+<link rel="icon" href="https://simiely.github.io/hub-world/favicon.png" type="image/png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#161110;
+    --bg-warm:#1E1817;
+    --ink:#E8E4E1;
+    --ink-soft:#A89F9A;
+    --ink-faint:#6E6560;
+    --rose:#FB7299;
+    --rose-rgb:251,114,153;
+    --rose-deep:#D95D7E;
+    --rose-soft:#FC9BB8;
+    --cream:#2A2220;
+    --hairline:rgba(255,255,255,.08);
+    --ease:cubic-bezier(.7,.05,.2,1);
+    --ease-out:cubic-bezier(.16,1,.3,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:"Geist",-apple-system,sans-serif;font-weight:400;line-height:1.5;
+    -webkit-font-smoothing:antialiased;overflow:hidden;
+  }
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;
+    opacity:.06;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  ::selection{background:var(--rose);color:#fff}
+  .deck{height:100vh;height:100dvh;overflow-y:auto;scroll-snap-type:y mandatory;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .deck::-webkit-scrollbar{display:none}
+  .slide{
+    position:relative;min-height:100vh;min-height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;
+    display:flex;flex-direction:column;justify-content:center;
+    padding:clamp(72px,9vh,120px) clamp(24px,5vw,64px) clamp(56px,7vh,88px);overflow:hidden;
+  }
+  .nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:18px clamp(20px,4vw,40px);mix-blend-mode:difference;color:#fff;pointer-events:none}
+  .nav > *{pointer-events:auto}
+  .nav__brand{font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:19px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+  .nav__brand .dot{width:9px;height:9px;border-radius:50%;background:var(--rose);display:inline-block;animation:pulse 2.4s var(--ease) infinite}
+  @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.55}}
+  .nav__meta{display:flex;align-items:center;gap:24px;font-size:13px;font-family:"Geist Mono",monospace}
+  .nav__meta a{color:inherit;text-decoration:none;position:relative}
+  .nav__meta a::after{content:"";position:absolute;left:0;bottom:-3px;height:1px;width:0;background:currentColor;transition:width .4s var(--ease)}
+  .nav__meta a:hover::after{width:100%}
+  #nav-version-link::after{display:none}
+  #nav-version-link .nav__ver{transition:all .35s var(--ease);display:inline-block}
+  #nav-version-link:hover .nav__ver{background:var(--rose);border-color:var(--rose);color:#fff}
+  .nav__ver{padding:5px 11px;border:1px solid currentColor;border-radius:100px;font-size:11px}
+  .dots{position:fixed;right:clamp(16px,2.4vw,32px);top:50%;transform:translateY(-50%);z-index:100;display:flex;flex-direction:column;gap:12px}
+  .dot-btn{width:3px;height:3px;border-radius:50%;border:none;cursor:pointer;background:rgba(255,255,255,.18);padding:0;position:relative;opacity:.5;transition:all .4s var(--ease)}
+  .dot-btn.active{background:var(--rose);transform:scale(1.5);opacity:1}
+  .dot-btn::after{content:attr(data-label);position:absolute;right:18px;top:50%;transform:translateY(-50%);font-family:"Geist Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);white-space:nowrap;opacity:0;transition:opacity .3s var(--ease);pointer-events:none}
+  .dot-btn:hover::after{opacity:1}
+  .dot-btn.active::after{color:var(--rose)}
+  .hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:100;display:flex;flex-direction:column;align-items:center;gap:10px;transition:opacity .8s var(--ease);font-family:"Geist Mono",monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);opacity:1}
+  .hint.hide{opacity:0;pointer-events:none}
+  .mouse{width:24px;height:36px;border-radius:100px;border:2px solid var(--ink-faint);position:relative}
+  .mouse::after{content:"";position:absolute;top:7px;left:50%;transform:translateX(-50%);width:3px;height:8px;border-radius:100px;background:var(--ink-faint);animation:scrollWheel 2s var(--ease) infinite}
+  @keyframes scrollWheel{0%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(10px)}}
+  .hero__inner{display:grid;grid-template-columns:1.2fr 1fr;gap:clamp(32px,5vw,72px);align-items:center;max-width:1280px;margin:0 auto;width:100%}
+  .hero__title{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:clamp(40px,7.5vw,82px);line-height:1.05;letter-spacing:-.03em;margin-bottom:28px}
+  .hero__title .l2{margin-top:-.06em;display:block}
+  .hero__title em{color:var(--rose);font-style:italic}
+  .hero__feat{background:var(--cream);border-radius:16px;padding:clamp(12px,2vw,18px) clamp(16px,2.4vw,24px);display:inline-flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;border:1px solid var(--hairline)}
+  .hero__feat-label{font-family:"Geist Mono",monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--rose);background:rgba(var(--rose-rgb),.12);padding:3px 10px;border-radius:100px}
+  .hero__feat-text{font-size:clamp(13px,1.2vw,15px);color:var(--ink-soft)}
+  .hero__sub{font-size:clamp(15px,1.4vw,18px);color:var(--ink-soft);max-width:520px;line-height:1.6}
+  .badge-area{background:var(--cream);border-radius:20px;padding:clamp(20px,3vw,36px);border:1px solid var(--hairline);text-align:center;justify-self:end;width:100%;max-width:340px}
+  .badge-area__label{font-family:"Geist Mono",monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
+  .badge-area__icon{font-size:clamp(44px,6vw,64px);margin-bottom:10px;line-height:1}
+  .badge-area__tags{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+  .badge-area__tags span{background:rgba(var(--rose-rgb),.1);color:var(--rose-soft);padding:4px 14px;border-radius:100px;font-size:11px;font-family:"Geist Mono",monospace;letter-spacing:.02em}
+  .ticker{position:absolute;bottom:clamp(16px,2.5vh,32px);left:0;right:0;overflow:hidden;pointer-events:none}
+  .ticker__track{display:flex;gap:80px;animation:tick 18s linear infinite;white-space:nowrap;width:max-content}
+  .ticker__item{font-family:"Geist Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint)}
+  @keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+  .problem__inner{max-width:720px;margin:0 auto;width:100%}
+  .problem::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(var(--rose-rgb),.04) 0,transparent 60%);pointer-events:none;transition:background .04s}
+  .problem__eyebrow{display:flex;align-items:center;gap:14px;font-family:"Geist Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:20px}
+  .problem__eyebrow .bar{width:32px;height:1px;background:var(--hairline)}
+  .problem__title{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:clamp(32px,5vw,56px);line-height:1.1;letter-spacing:-.02em;margin-bottom:20px}
+  .problem__title em{color:var(--rose);font-style:italic}
+  .problem__sub{font-size:clamp(15px,1.3vw,17px);color:var(--ink-soft);line-height:1.7;margin-bottom:40px}
+  .problem__stat{display:flex;gap:clamp(24px,4vw,48px);flex-wrap:wrap}
+  .problem__stat .item{display:flex;flex-direction:column;gap:3px}
+  .problem__stat .n{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:clamp(28px,3.6vw,42px);letter-spacing:-.03em;color:var(--rose)}
+  .problem__stat .l{font-size:12px;color:var(--ink-faint);font-family:"Geist Mono",monospace;text-transform:uppercase;letter-spacing:.08em}
+  .sec__head{display:flex;align-items:baseline;gap:16px;margin-bottom:clamp(24px,3.2vh,40px)}
+  .sec__num{font-family:"Geist Mono",monospace;font-size:11px;letter-spacing:.12em;color:var(--ink-faint)}
+  .sec__title{font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:clamp(22px,2.8vw,30px);letter-spacing:-.01em}
+  .sec__title em{color:var(--rose);font-style:italic}
+  .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,2vw,20px);max-width:1080px;margin:0 auto;width:100%}
+  .feat__cell{background:var(--cream);border-radius:18px;padding:clamp(16px,2.2vw,28px);border:1px solid var(--hairline);transition:border-color .4s var(--ease),transform .4s var(--ease)}
+  .feat__cell:hover{border-color:rgba(var(--rose-rgb),.3);transform:translateY(-3px)}
+  .feat__num{font-family:"Geist Mono",monospace;font-size:10px;color:var(--ink-faint);letter-spacing:.06em;margin-bottom:10px;display:block}
+  .feat__icon{font-size:clamp(22px,2.6vw,30px);margin-bottom:10px;line-height:1}
+  .feat__name{font-weight:500;font-size:clamp(13px,1.1vw,15px);margin-bottom:6px;letter-spacing:-.01em}
+  .feat__desc{font-size:clamp(11px,.9vw,13px);color:var(--ink-soft);line-height:1.5}
+  .how__grid{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(12px,2vw,20px);max-width:860px;margin:0 auto;width:100%}
+  .how__cell{background:var(--cream);border-radius:18px;padding:clamp(14px,2vw,24px);border:1px solid var(--hairline);display:flex;flex-direction:column;gap:10px;transition:border-color .4s var(--ease)}
+  .how__cell--accent{border-color:rgba(var(--rose-rgb),.18);background:linear-gradient(135deg,rgba(var(--rose-rgb),.06),transparent)}
+  .how__step{font-family:"Geist Mono",monospace;font-size:10px;color:var(--ink-faint);letter-spacing:.06em}
+  .how__icon{font-size:clamp(22px,2.6vw,30px);line-height:1}
+  .how__name{font-weight:500;font-size:clamp(13px,1.1vw,15px);margin-bottom:4px}
+  .how__desc{font-size:clamp(11px,.9vw,13px);color:var(--ink-soft);line-height:1.5}
+  .how__flow{grid-column:1 / -1;display:flex;align-items:center;justify-content:center;gap:clamp(8px,1.2vw,16px);padding:clamp(10px,1.4vh,18px);font-family:"Geist Mono",monospace;font-size:clamp(10px,.85vw,12px);color:var(--ink-faint);text-transform:uppercase;letter-spacing:.1em;border-top:1px solid var(--hairline);margin-top:4px}
+  .how__flow .arrow{color:var(--rose);font-size:14px}
+  .install__grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(20px,3vw,40px);max-width:960px;margin:0 auto;width:100%}
+  .install__steps{list-style:none;display:flex;flex-direction:column;gap:12px}
+  .install__step{display:flex;gap:14px;align-items:flex-start;background:var(--cream);border-radius:14px;padding:14px 18px;border:1px solid var(--hairline)}
+  .install__step-num{width:26px;height:26px;border-radius:50%;background:rgba(var(--rose-rgb),.12);color:var(--rose);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;margin-top:2px}
+  .install__step-title{font-weight:500;font-size:14px;margin-bottom:3px}
+  .install__step-desc{font-size:12px;color:var(--ink-soft);line-height:1.5}
+  .install__code{background:var(--cream);border-radius:14px;padding:16px 20px;font-family:"Geist Mono",monospace;font-size:13px;line-height:1.6;border:1px solid var(--hairline);word-break:break-all}
+  .install__code .cm{color:var(--ink-faint)}.install__code .hl{color:var(--rose)}
+  .btn-primary{background:var(--rose);color:#fff;border:none;border-radius:100px;padding:14px 32px;font-size:15px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .3s var(--ease)}
+  .btn-primary:hover{transform:scale(1.04);box-shadow:0 6px 24px rgba(var(--rose-rgb),.3)}
+  .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--hairline);border-radius:100px;padding:14px 32px;font-size:15px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .3s var(--ease)}
+  .btn-ghost:hover{border-color:var(--ink-soft);background:var(--cream)}
+  .cta__inner{text-align:center;max-width:600px;margin:0 auto;width:100%}
+  .cta__eyebrow{font-family:"Geist Mono",monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:14px}
+  .cta__title{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:clamp(32px,5vw,56px);line-height:1.1;letter-spacing:-.02em;margin-bottom:28px}
+  .cta__title em{color:var(--rose);font-style:italic}
+  .cta__btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
+  .cta__meta{font-size:12px;color:var(--ink-faint)}
+  .cta__meta a{color:var(--ink-soft);text-decoration:none;border-bottom:1px solid var(--hairline);transition:color .3s}
+  .cta__meta a:hover{color:var(--rose)}
+  .hub-back{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:14px 0;pointer-events:none;text-decoration:none;mix-blend-mode:difference;color:#fff}
+  .hub-back__inner{pointer-events:auto;display:flex;align-items:center;gap:10px;padding-top:3px;font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:19px;letter-spacing:-.01em;cursor:pointer;transition:opacity .3s}
+  .hub-back__inner:hover{opacity:.7}
+  .hub-back__logo{height:1.12rem;width:auto;display:block;vertical-align:middle}
+  @media(max-width:860px){
+    .hero__inner{grid-template-columns:1fr;gap:24px}
+    .badge-area{text-align:left;justify-self:start}
+    .badge-area__tags{justify-content:flex-start}
+    .feat{grid-template-columns:1fr 1fr}
+    .how__grid{grid-template-columns:1fr}
+    .install__grid{grid-template-columns:1fr}
+  }
+  @media(max-width:520px){.feat{grid-template-columns:1fr}.nav__meta .nav__link-text{display:none}}
+  @media(max-width:768px){.nav__brand{display:none}.nav{justify-content:flex-end}.hub-back{justify-content:flex-start;padding:14px clamp(20px,4vw,40px)}}
+  .anim{opacity:0;transform:translateY(24px);transition:all .8s var(--ease-out)}
+  .anim.scale{transform:scale(.92)}
+  .anim.from-l{transform:translateX(-40px)}.anim.from-r{transform:translateX(40px)}
+  .is-active .anim.d1{opacity:1;transform:none;transition-delay:.05s}
+  .is-active .anim.d2{opacity:1;transform:none;transition-delay:.12s}
+  .is-active .anim.d3{opacity:1;transform:none;transition-delay:.2s}
+  .is-active .anim.d4{opacity:1;transform:none;transition-delay:.28s}
+  .is-active .anim.d5{opacity:1;transform:none;transition-delay:.36s}
+  .is-active .anim.d6{opacity:1;transform:none;transition-delay:.44s}
+  .is-active .anim.d7{opacity:1;transform:none;transition-delay:.52s}
+  .is-active .anim.d8{opacity:1;transform:none;transition-delay:.6s}
+</style>
+</head>
+<body>
+
+<a class="hub-back" href="https://simiely.github.io/hub-world/" aria-label="Hub World">
+  <span class="hub-back__inner">
+    <img class="hub-back__logo" src="https://simiely.github.io/hub-world/logo.png" alt="Hub World">
+    <span>Hub World</span>
+  </span>
+</a>
+
+<nav class="nav">
+  <div class="nav__brand"><span class="dot"></span><span>夜深模式</span></div>
+  <div class="nav__meta">
+    <a href="https://github.com/Simiely/DarkMask" target="_blank" class="nav__link-text">GitHub</a>
+    <a href="https://github.com/Simiely/DarkMask" target="_blank" id="nav-version-link" style="text-decoration:none;color:inherit"><span class="nav__ver">v2.1</span></a>
+  </div>
+</nav>
+
+<div class="dots" id="dots">
+  <button class="dot-btn active" data-index="0" data-label="首页" aria-label="首页"></button>
+  <button class="dot-btn" data-index="1" data-label="痛点" aria-label="痛点"></button>
+  <button class="dot-btn" data-index="2" data-label="功能" aria-label="功能"></button>
+  <button class="dot-btn" data-index="3" data-label="上手" aria-label="上手"></button>
+  <button class="dot-btn" data-index="4" data-label="安装" aria-label="安装"></button>
+  <button class="dot-btn" data-index="5" data-label="开始" aria-label="开始"></button>
+</div>
+
+<div class="hint" id="hint"><span class="mouse"></span><span>Scroll</span></div>
+
+<div class="deck" id="deck">
+
+  <!-- SLIDE 1: HERO -->
+  <section class="slide hero">
+    <div class="hero__inner">
+      <div>
+        <div class="anim d1">
+          <h1 class="hero__title">
+            <span>全屏降亮</span><br>
+            <span class="l2"><span>护眼</span> <em>蒙版</em></span>
+          </h1>
+        </div>
+        <div class="hero__feat anim d2">
+          <div class="hero__feat-label">夜间利器</div>
+          <div class="hero__feat-text">可调节透明度与颜色的<b>全屏蒙版</b>，覆盖状态栏与刘海区</div>
+        </div>
+        <div class="hero__sub anim d3">在前台绘制可自定义的降亮蒙版，<b>有效降低屏幕亮度</b>，适合夜间使用</div>
+      </div>
+      <div class="badge-area anim scale d4">
+        <div class="badge-area__label">特性</div>
+        <div class="badge-area__icon">🌙</div>
+        <div class="badge-area__tags">
+          <span>HyperOS 3</span><span>Android 13+</span><span>前台服务</span>
+        </div>
+      </div>
+    </div>
+    <div class="ticker">
+      <div class="ticker__track">
+        <span class="ticker__item">覆盖状态栏与刘海</span>
+        <span class="ticker__item">3个颜色预设</span>
+        <span class="ticker__item">HSL 调色</span>
+        <span class="ticker__item">悬浮按钮控制</span>
+        <span class="ticker__item">可拖拽·靠边吸附</span>
+        <span class="ticker__item">通知栏快捷操作</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: PROBLEM -->
+  <section class="slide problem" data-mouse-parallax>
+    <div class="problem__inner">
+      <div class="problem__eyebrow anim d1"><span class="bar"></span><span>痛点</span></div>
+      <h2 class="problem__title anim d2">屏幕不够暗<br><em>刺眼难入睡</em></h2>
+      <p class="problem__sub anim d3">手机最低亮度在黑暗环境中仍然刺眼。系统自带的亮度调节范围有限，且无法过滤蓝光色调。<strong>夜深模式</strong>通过绘制自定义颜色的全屏蒙版，将亮度降到系统无法达到的水平。</p>
+      <div class="problem__stat anim d4">
+        <div class="item"><span class="n">1%–95%</span><span class="l">透明度<br>可调范围</span></div>
+        <div class="item"><span class="n">360°</span><span class="l">色相<br>全覆盖</span></div>
+        <div class="item"><span class="n">3</span><span class="l">颜色<br>预设槽</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: FEATURES -->
+  <section class="slide">
+    <div class="sec__head anim d1">
+      <span class="sec__num">01</span>
+      <h2 class="sec__title"><span>全部</span><em>功能</em></h2>
+    </div>
+    <div class="feat" id="feat-grid">
+      <div class="feat__cell anim scale d2"><span class="feat__num">01</span><div class="feat__icon">🌗</div><div class="feat__name">全屏蒙版</div><div class="feat__desc">覆盖状态栏与刘海，支持自定义颜色与透明度</div></div>
+      <div class="feat__cell anim scale d3"><span class="feat__num">02</span><div class="feat__icon">🎨</div><div class="feat__name">HSL 调色</div><div class="feat__desc">色相 × 饱和度 × 亮度精细调节，实时对分预览</div></div>
+      <div class="feat__cell anim scale d4"><span class="feat__num">03</span><div class="feat__icon">📌</div><div class="feat__name">3个颜色预设</div><div class="feat__desc">快速切换常用颜色，长按保存，双击归零</div></div>
+      <div class="feat__cell anim scale d5"><span class="feat__num">04</span><div class="feat__icon">🖱</div><div class="feat__name">悬浮按钮</div><div class="feat__desc">点按弹控制面板，长按开关蒙版，可拖动靠边吸附</div></div>
+      <div class="feat__cell anim scale d6"><span class="feat__num">05</span><div class="feat__icon">🔔</div><div class="feat__name">常驻通知</div><div class="feat__desc">通知栏置顶显示，支持切换/设置/关闭</div></div>
+      <div class="feat__cell anim scale d7"><span class="feat__num">06</span><div class="feat__icon">⚡</div><div class="feat__name">快捷磁贴</div><div class="feat__desc">下拉通知栏一键开关蒙版</div></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: USAGE -->
+  <section class="slide">
+    <div class="sec__head anim d1">
+      <span class="sec__num">02</span>
+      <h2 class="sec__title"><span>快速</span><em>上手</em></h2>
+    </div>
+    <div class="how__grid" id="usage-grid">
+      <div class="how__cell how__cell--accent anim from-l d2">
+        <span class="how__step">01</span><div class="how__icon">🔓</div>
+        <div><div class="how__name">授予悬浮窗权限</div><div class="how__desc">点击主界面按钮跳转设置开启</div></div>
+      </div>
+      <div class="how__cell anim from-r d3">
+        <span class="how__step">02</span><div class="how__icon">🔔</div>
+        <div><div class="how__name">允许通知</div><div class="how__desc">Android 13+ 启动时自动申请</div></div>
+      </div>
+      <div class="how__cell anim from-l d4">
+        <span class="how__step">03</span><div class="how__icon">▶</div>
+        <div><div class="how__name">启动蒙版</div><div class="how__desc">点击「启动蒙版」按钮或长按悬浮钮</div></div>
+      </div>
+      <div class="how__cell how__cell--accent anim from-r d5">
+        <span class="how__step">04</span><div class="how__icon">🎨</div>
+        <div><div class="how__name">调色并保存</div><div class="how__desc">拖 HSL 滑条调色，长按预设存储</div></div>
+      </div>
+      <div class="how__flow anim d6">
+        <span>授权</span><span class="arrow">→</span><span>启动</span><span class="arrow">→</span><span>调色</span><span class="arrow">→</span><span>保存</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: INSTALL -->
+  <section class="slide install">
+    <div class="sec__head anim d1">
+      <span class="sec__num">03</span>
+      <h2 class="sec__title"><span>安装</span><em>指南</em></h2>
+    </div>
+    <div class="install__grid">
+      <div>
+        <ul class="install__steps">
+          <li class="install__step anim d2"><span class="install__step-num">1</span><div><div class="install__step-title">下载 APK</div><div class="install__step-desc">从 Releases 下载最新 yeshen-mode-*.apk</div></div></li>
+          <li class="install__step anim d3"><span class="install__step-num">2</span><div><div class="install__step-title">允许安装</div><div class="install__step-desc">系统提示时点击「继续安装」</div></div></li>
+          <li class="install__step anim d4"><span class="install__step-num">3</span><div><div class="install__step-title">授予悬浮窗</div><div class="install__step-desc">打开悬浮窗权限开关</div></div></li>
+          <li class="install__step anim d5"><span class="install__step-num">4</span><div><div class="install__step-title">开始使用</div><div class="install__step-desc">点击「启动蒙版」即可</div></div></li>
+        </ul>
+      </div>
+      <div class="anim d4">
+        <div class="install__code">
+          <span class="cm">git clone</span> https://github.com/<br><span class="hl">Simiely</span>/<span class="hl">DarkMask</span>.git<br>
+          <span class="cm"># 或用最新 Release</span>
+        </div>
+        <div class="install__code" style="margin-top:12px;padding:12px 20px">
+          <span class="cm">● Android 6.0+ (minSdk 23)</span><br>
+          <span class="cm">● HyperOS / MIUI 完全兼容</span><br>
+          <span class="cm">● 无需 Root · 无后台进程</span>
+        </div>
+        <div style="margin-top:20px;">
+          <a href="https://github.com/Simiely/DarkMask/releases" target="_blank" class="btn-primary" style="display:inline-flex;font-size:13px;padding:12px 28px;">⬇ 下载夜深模式 v2.1</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: CTA -->
+  <section class="slide cta">
+    <div class="cta__inner">
+      <div class="cta__eyebrow anim d1">试试看？</div>
+      <h2 class="cta__title anim d2">夜深了<br><em>让屏幕更舒适</em></h2>
+      <div class="cta__btns anim d3">
+        <a href="https://github.com/Simiely/DarkMask" target="_blank" class="btn-primary">★ Star on GitHub</a>
+        <a href="https://github.com/Simiely/DarkMask/issues" target="_blank" class="btn-ghost">💬 反馈问题</a>
+      </div>
+      <p class="cta__meta anim d4">MIT License · Made by <a href="https://github.com/Simiely" target="_blank">Simiely</a></p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  var deck = document.getElementById('deck');
+  var slides = deck.querySelectorAll('.slide');
+  var dots = document.querySelectorAll('.dot-btn');
+  var hint = document.getElementById('hint');
+  var activeIndex = -1;
+  var ticking = false;
+  function updateActive(){
+    var scrollTop = deck.scrollTop;
+    var viewHeight = deck.clientHeight;
+    var bestIdx = 0, bestDist = Infinity;
+    slides.forEach(function(s, i) {
+      var rect = s.getBoundingClientRect();
+      var mid = rect.top + rect.height / 2;
+      var dist = Math.abs(mid - viewHeight / 2);
+      if(dist < bestDist){ bestDist = dist; bestIdx = i; }
+    });
+    if(bestIdx !== activeIndex){
+      activeIndex = bestIdx;
+      dots.forEach(function(d, i) { d.classList.toggle('active', i === activeIndex); });
+      slides.forEach(function(s, i) { s.classList.toggle('is-active', i === activeIndex); });
+    }
+    hint.classList.toggle('hide', scrollTop > 10);
+  }
+  deck.addEventListener('scroll', function() {
+    if(!ticking){ requestAnimationFrame(function() { updateActive(); ticking = false; }); ticking = true; }
+  });
+  dots.forEach(function(dot) {
+    dot.addEventListener('click', function() {
+      var target = slides[parseInt(dot.dataset.index)];
+      if(target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+  var ps = document.querySelector('.problem');
+  if(ps) document.addEventListener('mousemove', function(e) {
+    var r = ps.getBoundingClientRect();
+    if(r.top < window.innerHeight && r.bottom > 0){
+      ps.style.setProperty('--mx', (e.clientX / window.innerWidth * 100) + '%');
+      ps.style.setProperty('--my', (e.clientY / window.innerHeight * 100) + '%');
+    }
+  });
+  updateActive();
+})();
+</script>
+</body>
+</html>
