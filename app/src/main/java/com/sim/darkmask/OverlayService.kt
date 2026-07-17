@@ -78,6 +78,7 @@ class OverlayService : Service() {
             hslDragging = true
             Prefs.setColor(this@OverlayService, ColorUtil.hslToRgb(refs.h.progress, refs.s.progress, refs.l.progress))
             applyAll()
+            updateSelectedPresetVisual()
         }
         override fun onStartTrackingTouch(seekBar: SeekBar?) { hslDragging = true }
         override fun onStopTrackingTouch(seekBar: SeekBar?) {
@@ -442,6 +443,18 @@ class OverlayService : Service() {
     private fun syncHsl(col: Int, h: SeekBar, s: SeekBar, l: SeekBar) {
         val (hh, ss, ll) = ColorUtil.rgbToHsl(col)
         h.progress = hh; s.progress = ss; l.progress = ll
+    }
+
+    /** HSL 拖动时选中预设的颜色块实时跟随（不保存到预设存储）。 */
+    private fun updateSelectedPresetVisual() {
+        val sel = Prefs.getSelectedPreset(this)
+        if (sel < 0 || sel >= 3) return
+        val container = presetContainer ?: return
+        if (sel < container.childCount) {
+            val btn = container.getChildAt(sel) as? Button ?: return
+            val bg = btn.background as? GradientDrawable ?: return
+            bg.setColor(Prefs.getColor(this))
+        }
     }
 
     private fun simple(onProgress: (Int) -> Unit) = object : SeekBar.OnSeekBarChangeListener {

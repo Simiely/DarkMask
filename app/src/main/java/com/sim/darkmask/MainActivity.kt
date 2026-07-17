@@ -99,6 +99,7 @@ class MainActivity : AppCompatActivity() {
                 hslDragging = true
                 Prefs.setColor(this@MainActivity, ColorUtil.hslToRgb(seekH.progress, seekS.progress, seekL.progress))
                 applyToService()
+                updateSelectedPresetVisual()
             }
             override fun onStartTrackingTouch(sb: SeekBar?) { hslDragging = true }
             override fun onStopTrackingTouch(sb: SeekBar?) {
@@ -202,6 +203,17 @@ class MainActivity : AppCompatActivity() {
                 true
             }
             llPresets.addView(btn)
+        }
+    }
+
+    /** HSL 拖动时选中预设的颜色块实时跟随（不保存到预设存储）。 */
+    private fun updateSelectedPresetVisual() {
+        val sel = Prefs.getSelectedPreset(this)
+        if (sel < 0 || sel >= 3) return
+        if (sel < llPresets.childCount) {
+            val btn = llPresets.getChildAt(sel) as? Button ?: return
+            val bg = btn.background as? GradientDrawable ?: return
+            bg.setColor(Prefs.getColor(this))
         }
     }
 
