@@ -107,7 +107,7 @@ class MainActivity : AppCompatActivity() {
             override fun onStartTrackingTouch(sb: SeekBar?) { hslDragging = true }
             override fun onStopTrackingTouch(sb: SeekBar?) {
                 hslDragging = false
-                buildPresets()
+                // 不重建预设：让 updatePresetPreview() 的对分效果持续保留
             }
         }
         seekH.setOnSeekBarChangeListener(hsl)

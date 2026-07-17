@@ -85,7 +85,7 @@ class OverlayService : Service() {
         override fun onStartTrackingTouch(seekBar: SeekBar?) { hslDragging = true }
         override fun onStopTrackingTouch(seekBar: SeekBar?) {
             hslDragging = false
-            presetContainer?.let { buildPresetButtons(it) }
+            // 不重建预设：让 updatePresetPreview() 的对分效果持续保留
         }
     }
 
