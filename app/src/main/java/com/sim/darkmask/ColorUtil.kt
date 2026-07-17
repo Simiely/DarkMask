@@ -16,15 +16,15 @@ object ColorUtil {
         val r = Color.red(color) / 255f
         val g = Color.green(color) / 255f
         val b = Color.blue(color) / 255f
-        val max = max(r, g, b)
-        val min = min(r, g, b)
-        val l = (max + min) / 2f
+        val mx = max(r, g, b)
+        val mn = min(r, g, b)
+        val l = (mx + mn) / 2f
         var h = 0f
         var s = 0f
-        if (max != min) {
-            val d = max - min
-            s = if (l > 0.5f) d / (2f - max - min) else d / (max + min)
-            h = when (max) {
+        if (mx != mn) {
+            val d = mx - mn
+            s = if (l > 0.5f) d / (2f - mx - mn) else d / (mx + mn)
+            h = when (mx) {
                 r -> (g - b) / d + (if (g < b) 6f else 0f)
                 g -> (b - r) / d + 2f
                 else -> (r - g) / d + 4f
