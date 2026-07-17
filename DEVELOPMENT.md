@@ -165,7 +165,9 @@ val mx = max(max(r, g), b)
 
 **问题**：点击通知→启动 `PanelLauncherActivity`→发广播弹面板。如果服务未运行需先启动，最初用 `Handler.postDelayed(300ms)` 猜时间——在慢设备上不可靠。
 
-**修复**：新增 `ACTION_START_AND_PANEL` 广播，服务 `onCreate` 注册 receiver 后处理该广播自动弹面板。`startForegroundService` 同步等待 `onCreate` 完成，receiver 就绪是确定的。
+**修复**：新增 `ACTION_START_AND_PANEL` 广播，服务 `onCreate` 注册 receiver 后处理该广播自动弹面板。
+
+注意：`startForegroundService()` 是异步的——它将 Service 创建排入主线程队列，`sendBroadcast()` 的广播也异步投递。两者在主线程上顺序执行，广播投递时 receiver 已就绪，故无需硬编码延迟。注释已纠正。
 
 ### 8. 预设对分色预览实现
 
@@ -191,6 +193,40 @@ btn.background = LayerDrawable(arrayOf(storedLayer, clip))
 ### 10. 三态预设槽存储
 
 预设颜色用 `String` 存 `SharedPreferences`，而非 `Int`。原因：`Int` 默认值 0 与黑色 `0xFF000000` 混淆（在 Kotlin 中被解析为 `-16777216`），无法区分"空"和"黑色"。String 的 `null` 天然表示空。
+
+### 11. 双击预设 HSL 归零（不保存预设）
+
+双击预设将当前色设为黑色（HSL = 0/0/0），**但不修改预设存储色**。预览显示左半存储色、右半黑色。关键点：
+
+```kotlin
+// ❌ 不要 setPreset（会导致预设颜色丢失）
+// Prefs.setPreset(this, i, Color.BLACK)
+// ✅ 只 setColor，保留预设存储色
+Prefs.setColor(this, Color.BLACK)
+Prefs.setSelectedPreset(this, i)
+updatePresetPreview()  // 显示对分：左存色 / 右黑色
+```
+
+`updatePresetPreview()` 中 `storedColor = Prefs.getPreset()`（不变）与 `currentColor = Color.BLACK` 不等，自动触发 Split 预览。`onStopTrackingTouch` 切勿调用 `buildPresetButtons()`——会销毁 `LayerDrawable` 导致对分消失。
+
+### 12. 拖色相时 S/L 自动提升
+
+双击归零后 HSL 为 0/0/0，此时拖色相颜色不可见。在 `onStartTrackingTouch` 中检测：
+
+```kotlin
+override fun onStartTrackingTouch(seekBar: SeekBar?) {
+    hslDragging = true
+    // 拖色相时若饱和度或亮度为 0 → 同时提到 50
+    if (seekBar == hSlider && (sSlider.progress == 0 || lSlider.progress == 0)) {
+        sSlider.progress = 50; lSlider.progress = 50
+        Prefs.setColor(this, ColorUtil.hslToRgb(hSlider.progress, 50, 50))
+        apply()
+        updatePresetPreview()
+    }
+}
+```
+
+注意条件为 `||`（或）而非 `&&`（与）——任一为零就提，覆盖双击归零和单值预设两种场景。
 
 ---
 
