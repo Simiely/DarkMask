@@ -188,9 +188,18 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:layout_marginBottom="24dp"
             android:text="悬浮按钮：点按=打开控制面板，长按=启用/关闭蒙版，拖动可自由悬停（靠近边缘自动收边）。"
             android:textColor="@color/text_secondary"
             android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btn_exit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="24dp"
+            android:backgroundTint="#B00020"
+            android:text="退出程序"
+            android:textColor="#FFFFFF" />
     </LinearLayout>
 </ScrollView>

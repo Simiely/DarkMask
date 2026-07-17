@@ -81,6 +81,11 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btn_perm_overlay).setOnClickListener { requestOverlay() }
         btnToggle.setOnClickListener { toggleService() }
+        findViewById<Button>(R.id.btn_exit).setOnClickListener {
+            if (OverlayService.isRunning(this))
+                sendBroadcast(Intent(OverlayService.ACTION_STOP).setPackage(packageName))
+            finish()
+        }
 
         seekOpacity.max = 90
         seekOpacity.setOnSeekBarChangeListener(simple { p ->
