@@ -119,10 +119,14 @@ class OverlayService : Service() {
     }
 
     private fun buildNotification(): Notification {
-        val chId = "darkmask_channel"
+        // 用新渠道 id：已创建渠道的重要性无法在代码里再升高，换 id 才能让 HIGH 生效。
+        val chId = "darkmask_fg_v2"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val ch = NotificationChannel(chId, "夜深模式", NotificationManager.IMPORTANCE_LOW)
-            ch.description = "常驻以支撑服务"
+            val ch = NotificationChannel(chId, "夜深模式运行状态", NotificationManager.IMPORTANCE_HIGH)
+            ch.description = "常驻通知：显示运行状态并置顶，点击可打开控制面板"
+            ch.setSound(null, null)      // 常驻通知，静音
+            ch.enableVibration(false)
+            ch.setShowBadge(false)
             (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(ch)
         }
         val togglePi = PendingIntent.getBroadcast(
@@ -141,7 +145,11 @@ class OverlayService : Service() {
             .setContentText("点击弹出控制面板 · 可切换蒙版")
             .setSmallIcon(R.drawable.ic_mask)
             .setOngoing(true)
-            .setOnlyAlertOnce(true)
+            .setOnlyAlertOnce(true)                                   // 静默更新，不重复弹出
+            .setPriority(NotificationCompat.PRIORITY_HIGH)            // 提升排序，尽量置顶
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)      // 锁屏也可见
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE) // 立即显示，不延迟
             .setContentIntent(panelPi)
             .addAction(R.drawable.ic_toggle, "切换", togglePi)
             .addAction(R.drawable.ic_settings, "设置", openPi)
@@ -157,22 +165,47 @@ class OverlayService : Service() {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         else WindowManager.LayoutParams.TYPE_PHONE
 
+    // 应用可用区尺寸（不含状态栏/导航栏）——用于悬浮钮定位。
     private fun screenW() = resources.displayMetrics.widthPixels
     private fun screenH() = resources.displayMetrics.heightPixels
 
-    // ---- 蒙版视图（全屏、穿透触摸） ----
+    // 物理全屏尺寸（含状态栏、导航栏、刘海区）——用于蒙版铺满整块屏幕。
+    private fun realScreenSize(): android.graphics.Point {
+        val p = android.graphics.Point()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val b = wm.maximumWindowMetrics.bounds
+            p.x = b.width(); p.y = b.height()
+        } else {
+            @Suppress("DEPRECATION")
+            wm.defaultDisplay.getRealSize(p)
+        }
+        return p
+    }
+
+    // ---- 蒙版视图（物理全屏、覆盖状态栏/刘海、穿透触摸） ----
     private fun createDimView() {
         dimView = View(this).apply { setBackgroundColor(Color.BLACK) }
+        val real = realScreenSize()
+        // 取两方向最大边做正方形铺满，横竖屏切换也不会露出状态栏；view 不可触摸，超出屏幕部分无副作用。
+        val side = if (real.x > real.y) real.x else real.y
         dimParams = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.MATCH_PARENT,
+            side,
+            side,
             overlayType(),
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                     or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
                     or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                     or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
-        ).apply { gravity = Gravity.TOP or Gravity.START }
+        ).apply {
+            gravity = Gravity.TOP or Gravity.START
+            x = 0; y = 0
+            // 允许绘制进刘海/挖孔区，彻底盖住顶部状态栏。
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+            }
+        }
         wm.addView(dimView, dimParams)
     }
 

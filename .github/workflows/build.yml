@@ -54,6 +54,25 @@ jobs:
             git push || echo "push skipped"
           fi
 
+      # Ensure a stable debug keystore exists so every build shares one signature.
+      # On the first run it is generated and committed back ([skip ci]); later runs reuse it.
+      - name: Generate fixed debug keystore if missing
+        run: |
+          if [ ! -f keystore/debug.keystore ]; then
+            mkdir -p keystore
+            keytool -genkeypair -v \
+              -keystore keystore/debug.keystore \
+              -storepass android -keypass android \
+              -alias androiddebugkey \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+            git config user.email "actions@github.com"
+            git config user.name "github-actions[bot]"
+            git add -f keystore/debug.keystore
+            git commit -m "ci: add fixed debug keystore [skip ci]" || echo "nothing to commit"
+            git push || echo "push skipped"
+          fi
+
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon
 

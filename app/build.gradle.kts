@@ -11,11 +11,26 @@ android {
         applicationId = "com.sim.darkmask"
         minSdk = 23
         targetSdk = 35
+        // 版本号仅在用户明确要求时手动更新，不再每次构建自增。
         versionCode = 6
         versionName = "1.6"
     }
 
+    // 固定 debug 签名：所有 CI 构建复用仓库内 keystore/debug.keystore，
+    // 保证每次产物签名一致，可直接覆盖安装、无需卸载。
+    signingConfigs {
+        getByName("debug") {
+            storeFile = rootProject.file("keystore/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("debug")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
