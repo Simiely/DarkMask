@@ -82,7 +82,6 @@ class OverlayService : Service() {
         override fun onStartTrackingTouch(seekBar: SeekBar?) { hslDragging = true }
         override fun onStopTrackingTouch(seekBar: SeekBar?) {
             hslDragging = false
-            Prefs.setSelectedPreset(this@OverlayService, -1)
             presetContainer?.let { buildPresetButtons(it) }
         }
     }

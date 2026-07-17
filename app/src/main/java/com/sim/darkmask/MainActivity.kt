@@ -103,7 +103,6 @@ class MainActivity : AppCompatActivity() {
             override fun onStartTrackingTouch(sb: SeekBar?) { hslDragging = true }
             override fun onStopTrackingTouch(sb: SeekBar?) {
                 hslDragging = false
-                Prefs.setSelectedPreset(this@MainActivity, -1)
                 buildPresets()
             }
         }
