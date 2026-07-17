@@ -71,42 +71,49 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
-        android:text="自定义颜色（R / G / B）"
+        android:text="自定义颜色（H / S / L）"
         android:textColor="@color/text_secondary"
         android:textSize="13sp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="R"
+        android:text="H  色相"
         android:textColor="@color/text_secondary" />
     <SeekBar
-        android:id="@+id/seek_r"
+        android:id="@+id/seek_h"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:max="255" />
+        android:max="360" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="G"
+        android:text="S  饱和度"
         android:textColor="@color/text_secondary" />
     <SeekBar
-        android:id="@+id/seek_g"
+        android:id="@+id/seek_s"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:max="255" />
+        android:max="100" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="B"
+        android:text="L  亮度"
         android:textColor="@color/text_secondary" />
     <SeekBar
-        android:id="@+id/seek_b"
+        android:id="@+id/seek_l"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:max="255" />
+        android:max="100" />
+
+    <Button
+        android:id="@+id/btn_save_slot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="保存当前颜色到槽位" />
 
     <Switch
         android:id="@+id/sw_autonight"

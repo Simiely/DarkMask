@@ -18,6 +18,9 @@ object Prefs {
     const val KEY_HIDE_FAB = "hide_fab"
     const val KEY_FAB_X = "fab_x"
     const val KEY_FAB_Y = "fab_y"
+    const val KEY_SLOT0 = "slot0"
+    const val KEY_SLOT1 = "slot1"
+    const val KEY_SLOT2 = "slot2"
 
     private fun sp(ctx: Context): SharedPreferences =
         ctx.getSharedPreferences(NAME, Context.MODE_PRIVATE)
@@ -41,4 +44,13 @@ object Prefs {
     fun getFabY(ctx: Context) = sp(ctx).getInt(KEY_FAB_Y, -1)
     fun setFabPos(ctx: Context, x: Int, y: Int) =
         sp(ctx).edit().putInt(KEY_FAB_X, x).putInt(KEY_FAB_Y, y).apply()
+
+    /** 用户存储槽位（0..2）。-1 表示空。 */
+    fun getSlot(ctx: Context, i: Int) = sp(ctx).getInt(slotKey(i), -1)
+    fun setSlot(ctx: Context, i: Int, c: Int) =
+        sp(ctx).edit().putInt(slotKey(i), c).apply()
+
+    private fun slotKey(i: Int) = when (i) {
+        0 -> KEY_SLOT0; 1 -> KEY_SLOT1; else -> KEY_SLOT2
+    }
 }

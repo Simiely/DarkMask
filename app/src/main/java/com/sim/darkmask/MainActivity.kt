@@ -34,9 +34,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnToggle: Button
     private lateinit var seekOpacity: SeekBar
     private lateinit var tvOpacity: TextView
-    private lateinit var seekR: SeekBar
-    private lateinit var seekG: SeekBar
-    private lateinit var seekB: SeekBar
+    private lateinit var seekH: SeekBar
+    private lateinit var seekS: SeekBar
+    private lateinit var seekL: SeekBar
     private lateinit var swAutoNight: Switch
     private lateinit var swHideFab: Switch
     private lateinit var llPresets: LinearLayout
@@ -51,9 +51,9 @@ class MainActivity : AppCompatActivity() {
         btnToggle = findViewById(R.id.btn_toggle)
         seekOpacity = findViewById(R.id.seek_opacity)
         tvOpacity = findViewById(R.id.tv_opacity_val)
-        seekR = findViewById(R.id.seek_r)
-        seekG = findViewById(R.id.seek_g)
-        seekB = findViewById(R.id.seek_b)
+        seekH = findViewById(R.id.seek_h)
+        seekS = findViewById(R.id.seek_s)
+        seekL = findViewById(R.id.seek_l)
         swAutoNight = findViewById(R.id.sw_autonight)
         swHideFab = findViewById(R.id.sw_hidefab)
         llPresets = findViewById(R.id.ll_presets)
@@ -68,33 +68,24 @@ class MainActivity : AppCompatActivity() {
             val o = p + 5
             Prefs.setOpacity(this, o); tvOpacity.text = "$o%"; applyToService()
         })
-        val rgb = simple { _ ->
-            Prefs.setColor(this, Color.rgb(seekR.progress, seekG.progress, seekB.progress))
+        seekH.max = 360; seekS.max = 100; seekL.max = 100
+        val hsl = simple { _ ->
+            Prefs.setColor(this, ColorUtil.hslToRgb(seekH.progress, seekS.progress, seekL.progress))
             applyToService()
         }
-        seekR.setOnSeekBarChangeListener(rgb)
-        seekG.setOnSeekBarChangeListener(rgb)
-        seekB.setOnSeekBarChangeListener(rgb)
+        seekH.setOnSeekBarChangeListener(hsl)
+        seekS.setOnSeekBarChangeListener(hsl)
+        seekL.setOnSeekBarChangeListener(hsl)
         swAutoNight.setOnCheckedChangeListener { _, c -> Prefs.setAutoNight(this, c); applyToService() }
         swHideFab.setOnCheckedChangeListener { _, c -> Prefs.setHideFab(this, c); applyToService() }
 
-        val list = arrayOf(
-            "纯黑" to Color.BLACK,
-            "暖光" to Color.parseColor("#FF9E5E"),
-            "护眼" to Color.parseColor("#7CFC00"),
-            "夜红" to Color.parseColor("#FF3B30"),
-            "深蓝" to Color.parseColor("#0B1E3F")
-        )
-        list.forEach { (name, col) ->
-            val b = Button(this); b.text = name
-            b.setOnClickListener {
-                Prefs.setColor(this, col)
-                seekR.progress = Color.red(col)
-                seekG.progress = Color.green(col)
-                seekB.progress = Color.blue(col)
-                applyToService()
-            }
-            llPresets.addView(b)
+        buildPresets()
+        findViewById<Button>(R.id.btn_save_slot).setOnClickListener {
+            val cur = Prefs.getColor(this)
+            val idx = (0..2).firstOrNull { Prefs.getSlot(this, it) < 0 } ?: 0
+            Prefs.setSlot(this, idx, cur)
+            buildPresets()
+            Toast.makeText(this, "已保存到槽${idx + 1}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -126,10 +117,40 @@ class MainActivity : AppCompatActivity() {
         tvOpacity.text = "$o%"
         swAutoNight.isChecked = Prefs.isAutoNight(this)
         swHideFab.isChecked = Prefs.isHideFab(this)
-        val col = Prefs.getColor(this)
-        seekR.progress = Color.red(col)
-        seekG.progress = Color.green(col)
-        seekB.progress = Color.blue(col)
+        val (h, s, l) = ColorUtil.rgbToHsl(Prefs.getColor(this))
+        seekH.progress = h; seekS.progress = s; seekL.progress = l
+    }
+
+    /** 预设区：仅保留一个「黑」，再加 3 个用户槽位（点=应用，长按=存当前色）。 */
+    private fun buildPresets() {
+        llPresets.removeAllViews()
+        val black = Button(this).apply {
+            text = "黑"
+            setOnClickListener { applyColor(Color.BLACK) }
+        }
+        llPresets.addView(black)
+        for (i in 0..2) {
+            val col = Prefs.getSlot(this, i)
+            val btn = Button(this).apply {
+                text = if (col >= 0) "槽${i + 1}" else "＋"
+                if (col >= 0) setBackgroundColor(col)
+                setOnClickListener { if (col >= 0) applyColor(col) }
+                setOnLongClickListener {
+                    Prefs.setSlot(this@MainActivity, i, Prefs.getColor(this@MainActivity))
+                    buildPresets()
+                    Toast.makeText(this@MainActivity, "已保存到槽${i + 1}", Toast.LENGTH_SHORT).show()
+                    true
+                }
+            }
+            llPresets.addView(btn)
+        }
+    }
+
+    private fun applyColor(c: Int) {
+        Prefs.setColor(this, c)
+        val (h, s, l) = ColorUtil.rgbToHsl(c)
+        seekH.progress = h; seekS.progress = s; seekL.progress = l
+        applyToService()
     }
 
     private fun requestOverlay() {
