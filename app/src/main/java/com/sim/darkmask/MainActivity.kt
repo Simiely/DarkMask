@@ -36,7 +36,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var seekH: SeekBar
     private lateinit var seekS: SeekBar
     private lateinit var seekL: SeekBar
-    private lateinit var swAutoNight: Switch
     private lateinit var swHideFab: Switch
     private lateinit var llPresets: LinearLayout
     private var hslDragging = false
@@ -53,7 +52,6 @@ class MainActivity : AppCompatActivity() {
         seekH = findViewById(R.id.seek_h)
         seekS = findViewById(R.id.seek_s)
         seekL = findViewById(R.id.seek_l)
-        swAutoNight = findViewById(R.id.sw_autonight)
         swHideFab = findViewById(R.id.sw_hidefab)
         llPresets = findViewById(R.id.ll_presets)
 
@@ -83,7 +81,6 @@ class MainActivity : AppCompatActivity() {
         seekH.setOnSeekBarChangeListener(hsl)
         seekS.setOnSeekBarChangeListener(hsl)
         seekL.setOnSeekBarChangeListener(hsl)
-        swAutoNight.setOnCheckedChangeListener { _, c -> Prefs.setAutoNight(this, c); applyToService() }
         swHideFab.setOnCheckedChangeListener { _, c -> Prefs.setHideFab(this, c); applyToService() }
 
         buildPresets()
@@ -118,7 +115,6 @@ class MainActivity : AppCompatActivity() {
         val o = Prefs.getOpacity(this)
         seekOpacity.progress = o - 5
         tvOpacity.text = "$o%"
-        swAutoNight.isChecked = Prefs.isAutoNight(this)
         swHideFab.isChecked = Prefs.isHideFab(this)
         if (!hslDragging) {
             val (h, s, l) = ColorUtil.rgbToHsl(Prefs.getColor(this))

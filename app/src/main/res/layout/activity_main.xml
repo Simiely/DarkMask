@@ -172,19 +172,10 @@
                 android:text="保存当前颜色到槽位" />
 
             <Switch
-                android:id="@+id/sw_autonight"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="自动夜间（22:00–07:00）"
-                android:textColor="@color/text_primary"
-                android:textSize="13sp" />
-
-            <Switch
                 android:id="@+id/sw_hidefab"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="10dp"
                 android:text="隐藏悬浮按钮"
                 android:textColor="@color/text_primary"
                 android:textSize="13sp" />

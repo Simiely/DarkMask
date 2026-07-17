@@ -30,7 +30,6 @@ import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
-import java.util.Calendar
 
 /**
  * 前台服务：负责绘制全屏降亮蒙版 + 可拖动/靠边隐藏的悬浮按钮 + 控制面板。
@@ -64,7 +63,6 @@ class OverlayService : Service() {
     private var panelParams: WindowManager.LayoutParams? = null
 
     private val handler = Handler(Looper.getMainLooper())
-    private var autoNightRunnable: Runnable? = null
     private var panelRefs: PanelRefs? = null
     private var fabSize = 0
     private var hslDragging = false
@@ -118,7 +116,6 @@ class OverlayService : Service() {
         createFab()
         createDimView()
         applyAll()
-        if (Prefs.isAutoNight(this)) startAutoNight()
     }
 
     private fun buildNotification(): Notification {
@@ -308,11 +305,10 @@ class OverlayService : Service() {
         val s = root.findViewById<SeekBar>(R.id.seek_s)
         val l = root.findViewById<SeekBar>(R.id.seek_l)
         val saveSlot = root.findViewById<Button>(R.id.btn_save_slot)
-        val autoNight = root.findViewById<Switch>(R.id.sw_autonight)
         val hideFab = root.findViewById<Switch>(R.id.sw_hidefab)
         val close = root.findViewById<Button>(R.id.btn_close)
 
-        panelRefs = PanelRefs(master, opacity, opacityVal, autoNight, hideFab, h, s, l)
+        panelRefs = PanelRefs(master, opacity, opacityVal, hideFab, h, s, l)
         presetContainer = presets
 
         opacity.max = 90
@@ -321,10 +317,6 @@ class OverlayService : Service() {
             val o = p + 5
             Prefs.setOpacity(this, o); opacityVal.text = "$o%"; applyAll()
         })
-        autoNight.setOnCheckedChangeListener { _, c ->
-            Prefs.setAutoNight(this, c)
-            if (c) startAutoNight() else stopAutoNight()
-        }
         hideFab.setOnCheckedChangeListener { _, c -> Prefs.setHideFab(this, c); applyAll() }
         close.setOnClickListener { closePanel() }
         root.findViewById<Button>(R.id.btn_exit).setOnClickListener { stopSelf() }
@@ -396,7 +388,6 @@ class OverlayService : Service() {
         val o = Prefs.getOpacity(this)
         refs.opacity.progress = o - 5
         refs.opacityVal.text = "$o%"
-        refs.autoNight.isChecked = Prefs.isAutoNight(this)
         refs.hideFab.isChecked = Prefs.isHideFab(this)
         if (!hslDragging) syncHsl(Prefs.getColor(this), refs.h, refs.s, refs.l)
     }
@@ -440,38 +431,8 @@ class OverlayService : Service() {
         startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
-    // ---- 自动夜间 ----
-    private fun startAutoNight() {
-        if (autoNightRunnable != null) return
-        autoNightRunnable = object : Runnable {
-            override fun run() {
-                applyAutoNight()
-                handler.postDelayed(this, 60_000)
-            }
-        }
-        handler.post(autoNightRunnable!!)
-    }
-
-    private fun stopAutoNight() {
-        autoNightRunnable?.let { handler.removeCallbacks(it) }
-        autoNightRunnable = null
-    }
-
-    private fun applyAutoNight() {
-        val cal = Calendar.getInstance()
-        val mins = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
-        val inNight = mins >= 22 * 60 || mins < 7 * 60
-        if (Prefs.isEnabled(this) != inNight) {
-            Prefs.setEnabled(this, inNight)
-            applyAll()
-            updateNotification()
-            MaskTileService.update(this)
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
-        stopAutoNight()
         try { unregisterReceiver(receiver) } catch (_: Exception) {}
         dimView?.let { wm.removeView(it) }
         fab?.let { wm.removeView(it) }
@@ -481,7 +442,7 @@ class OverlayService : Service() {
 
     private data class PanelRefs(
         val master: Switch, val opacity: SeekBar, val opacityVal: TextView,
-        val autoNight: Switch, val hideFab: Switch,
+        val hideFab: Switch,
         val h: SeekBar, val s: SeekBar, val l: SeekBar
     )
 }

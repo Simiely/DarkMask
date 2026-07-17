@@ -6,7 +6,7 @@ import android.graphics.Color
 
 /**
  * 轻量偏好存储（SharedPreferences，零依赖）。
- * 所有可调参数：开关 / 颜色 / 透明度 / 自动夜间 / 隐藏悬浮钮 / 悬浮钮位置。
+ * 所有可调参数：开关 / 颜色 / 透明度 / 隐藏悬浮钮 / 悬浮钮位置。
  */
 object Prefs {
     private const val NAME = "darkmask_prefs"
@@ -14,7 +14,6 @@ object Prefs {
     const val KEY_ENABLED = "enabled"
     const val KEY_COLOR = "color"
     const val KEY_OPACITY = "opacity"      // 5..95
-    const val KEY_AUTONIGHT = "autonight"
     const val KEY_HIDE_FAB = "hide_fab"
     const val KEY_FAB_X = "fab_x"
     const val KEY_FAB_Y = "fab_y"
@@ -35,9 +34,6 @@ object Prefs {
 
     fun getOpacity(ctx: Context) = sp(ctx).getInt(KEY_OPACITY, 60)
     fun setOpacity(ctx: Context, o: Int) = sp(ctx).edit().putInt(KEY_OPACITY, o.coerceIn(5, 95)).apply()
-
-    fun isAutoNight(ctx: Context) = sp(ctx).getBoolean(KEY_AUTONIGHT, false)
-    fun setAutoNight(ctx: Context, v: Boolean) = sp(ctx).edit().putBoolean(KEY_AUTONIGHT, v).apply()
 
     fun isHideFab(ctx: Context) = sp(ctx).getBoolean(KEY_HIDE_FAB, false)
     fun setHideFab(ctx: Context, v: Boolean) = sp(ctx).edit().putBoolean(KEY_HIDE_FAB, v).apply()
