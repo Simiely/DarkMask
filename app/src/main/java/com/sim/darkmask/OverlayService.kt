@@ -72,6 +72,9 @@ class OverlayService : Service() {
     private var hslDragging = false
     private var presetContainer: LinearLayout? = null
     private var fabAnimator: ValueAnimator? = null
+    /** 预设三连击计时：双击/三击归零 */
+    private val presetTapTime = LongArray(3) { 0L }
+    private val presetTapCount = IntArray(3) { 0 }
 
     private val hslListener = object : SeekBar.OnSeekBarChangeListener {
         override fun onProgressChanged(seekBar: SeekBar?, p: Int, fromUser: Boolean) {
@@ -406,6 +409,20 @@ class OverlayService : Service() {
             }
             btn.background = bg
             btn.setOnClickListener {
+                // 三连击检测：500ms 内点 3 次 → 重置该预设为黑色
+                val now = System.currentTimeMillis()
+                if (now - presetTapTime[i] > 500) { presetTapCount[i] = 0 }
+                presetTapCount[i]++
+                presetTapTime[i] = now
+                if (presetTapCount[i] >= 3) {
+                    presetTapCount[i] = 0
+                    Prefs.setPreset(this@OverlayService, i, android.graphics.Color.BLACK)
+                    Prefs.setSelectedPreset(this@OverlayService, i)
+                    buildPresetButtons(container)
+                    Toast.makeText(this@OverlayService, "已重置为黑色", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                // 正常点击：应用已有预设 / 空槽存当前色
                 val c = Prefs.getPreset(this@OverlayService, i)
                 if (c != null) {
                     val refs = panelRefs ?: return@setOnClickListener
@@ -414,7 +431,6 @@ class OverlayService : Service() {
                     syncHsl(c, refs.h, refs.s, refs.l)
                     applyAll()
                 } else {
-                    // 空槽：把当前颜色存进去
                     Prefs.setPreset(this@OverlayService, i, Prefs.getColor(this@OverlayService))
                     Prefs.setSelectedPreset(this@OverlayService, i)
                     Toast.makeText(this@OverlayService, "已保存到预设${i + 1}", Toast.LENGTH_SHORT).show()
