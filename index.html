@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>夜深模式 — 全屏降亮护眼</title>
+<title data-bind="pageTitle">夜深模式 — 全屏降亮护眼</title>
 <link rel="icon" href="https://simiely.github.io/hub-world/favicon.png" type="image/png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -45,7 +45,7 @@
     padding:clamp(72px,9vh,120px) clamp(24px,5vw,64px) clamp(56px,7vh,88px);overflow:hidden;
   }
   .nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:18px clamp(20px,4vw,40px);mix-blend-mode:difference;color:#fff;pointer-events:none}
-  .nav > *{pointer-events:auto}
+  .nav>*{pointer-events:auto}
   .nav__brand{font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:19px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
   .nav__brand .dot{width:9px;height:9px;border-radius:50%;background:var(--rose);display:inline-block;animation:pulse 2.4s var(--ease) infinite}
   @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.55}}
@@ -114,7 +114,7 @@
   .how__icon{font-size:clamp(22px,2.6vw,30px);line-height:1}
   .how__name{font-weight:500;font-size:clamp(13px,1.1vw,15px);margin-bottom:4px}
   .how__desc{font-size:clamp(11px,.9vw,13px);color:var(--ink-soft);line-height:1.5}
-  .how__flow{grid-column:1 / -1;display:flex;align-items:center;justify-content:center;gap:clamp(8px,1.2vw,16px);padding:clamp(10px,1.4vh,18px);font-family:"Geist Mono",monospace;font-size:clamp(10px,.85vw,12px);color:var(--ink-faint);text-transform:uppercase;letter-spacing:.1em;border-top:1px solid var(--hairline);margin-top:4px}
+  .how__flow{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:clamp(8px,1.2vw,16px);padding:clamp(10px,1.4vh,18px);font-family:"Geist Mono",monospace;font-size:clamp(10px,.85vw,12px);color:var(--ink-faint);text-transform:uppercase;letter-spacing:.1em;border-top:1px solid var(--hairline);margin-top:4px}
   .how__flow .arrow{color:var(--rose);font-size:14px}
   .install__grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(20px,3vw,40px);max-width:960px;margin:0 auto;width:100%}
   .install__steps{list-style:none;display:flex;flex-direction:column;gap:12px}
@@ -173,10 +173,10 @@
 </a>
 
 <nav class="nav">
-  <div class="nav__brand"><span class="dot"></span><span>夜深模式</span></div>
+  <div class="nav__brand"><span class="dot"></span><span id="brand-name">夜深模式</span></div>
   <div class="nav__meta">
     <a href="https://github.com/Simiely/DarkMask" target="_blank" class="nav__link-text">GitHub</a>
-    <a href="https://github.com/Simiely/DarkMask" target="_blank" id="nav-version-link" style="text-decoration:none;color:inherit"><span class="nav__ver">v2.1</span></a>
+    <a href="https://github.com/Simiely/DarkMask" target="_blank" id="nav-version-link" style="text-decoration:none;color:inherit"><span class="nav__ver" id="nav-version">v2.1</span></a>
   </div>
 </nav>
 
@@ -199,26 +199,26 @@
       <div>
         <div class="anim d1">
           <h1 class="hero__title">
-            <span>全屏降亮</span><br>
-            <span class="l2"><span>护眼</span> <em>蒙版</em></span>
+            <span id="hero-title-1">全屏降亮</span><br>
+            <span class="l2"><span id="hero-title-2">护眼</span> <em id="hero-title-em">蒙版</em></span>
           </h1>
         </div>
         <div class="hero__feat anim d2">
-          <div class="hero__feat-label">夜间利器</div>
-          <div class="hero__feat-text">可调节透明度与颜色的<b>全屏蒙版</b>，覆盖状态栏与刘海区</div>
+          <div class="hero__feat-label" id="hero-feat-label">夜间利器</div>
+          <div class="hero__feat-text" id="hero-feat-text">可调节透明度与颜色的<b>全屏蒙版</b>，覆盖状态栏与刘海区</div>
         </div>
-        <div class="hero__sub anim d3">在前台绘制可自定义的降亮蒙版，<b>有效降低屏幕亮度</b>，适合夜间使用</div>
+        <div class="hero__sub anim d3" id="hero-subtitle">在前台绘制可自定义的降亮蒙版，<b>有效降低屏幕亮度</b>，适合夜间使用</div>
       </div>
       <div class="badge-area anim scale d4">
-        <div class="badge-area__label">特性</div>
-        <div class="badge-area__icon">🌙</div>
-        <div class="badge-area__tags">
+        <div class="badge-area__label" id="hero-badge-label">特性</div>
+        <div class="badge-area__icon" id="hero-badge-icon">🌙</div>
+        <div class="badge-area__tags" id="hero-badge-tags">
           <span>HyperOS 3</span><span>Android 13+</span><span>前台服务</span>
         </div>
       </div>
     </div>
     <div class="ticker">
-      <div class="ticker__track">
+      <div class="ticker__track" id="ticker-track">
         <span class="ticker__item">覆盖状态栏与刘海</span>
         <span class="ticker__item">3个颜色预设</span>
         <span class="ticker__item">HSL 调色</span>
@@ -232,10 +232,10 @@
   <!-- SLIDE 2: PROBLEM -->
   <section class="slide problem" data-mouse-parallax>
     <div class="problem__inner">
-      <div class="problem__eyebrow anim d1"><span class="bar"></span><span>痛点</span></div>
-      <h2 class="problem__title anim d2">屏幕不够暗<br><em>刺眼难入睡</em></h2>
-      <p class="problem__sub anim d3">手机最低亮度在黑暗环境中仍然刺眼。系统自带的亮度调节范围有限，且无法过滤蓝光色调。<strong>夜深模式</strong>通过绘制自定义颜色的全屏蒙版，将亮度降到系统无法达到的水平。</p>
-      <div class="problem__stat anim d4">
+      <div class="problem__eyebrow anim d1"><span class="bar"></span><span id="problem-eyebrow">痛点</span></div>
+      <h2 class="problem__title anim d2" id="problem-title">屏幕不够暗<br><em>刺眼难入睡</em></h2>
+      <p class="problem__sub anim d3" id="problem-desc">手机最低亮度在黑暗环境中仍然刺眼。系统自带的亮度调节范围有限，且无法过滤蓝光色调。<strong>夜深模式</strong>通过绘制自定义颜色的全屏蒙版，将亮度降到系统无法达到的水平。</p>
+      <div class="problem__stat anim d4" id="problem-stats">
         <div class="item"><span class="n">1%–95%</span><span class="l">透明度<br>可调范围</span></div>
         <div class="item"><span class="n">360°</span><span class="l">色相<br>全覆盖</span></div>
         <div class="item"><span class="n">3</span><span class="l">颜色<br>预设槽</span></div>
@@ -244,78 +244,35 @@
   </section>
 
   <!-- SLIDE 3: FEATURES -->
-  <section class="slide">
+  <section class="slide" id="slide-features">
     <div class="sec__head anim d1">
-      <span class="sec__num">01</span>
-      <h2 class="sec__title"><span>全部</span><em>功能</em></h2>
+      <span class="sec__num" id="feat-section-num">01</span>
+      <h2 class="sec__title"><span id="feat-title">全部</span><em id="feat-title-em">功能</em></h2>
     </div>
-    <div class="feat" id="feat-grid">
-      <div class="feat__cell anim scale d2"><span class="feat__num">01</span><div class="feat__icon">🌗</div><div class="feat__name">全屏蒙版</div><div class="feat__desc">覆盖状态栏与刘海，支持自定义颜色与透明度</div></div>
-      <div class="feat__cell anim scale d3"><span class="feat__num">02</span><div class="feat__icon">🎨</div><div class="feat__name">HSL 调色</div><div class="feat__desc">色相 × 饱和度 × 亮度精细调节，实时对分预览</div></div>
-      <div class="feat__cell anim scale d4"><span class="feat__num">03</span><div class="feat__icon">📌</div><div class="feat__name">3个颜色预设</div><div class="feat__desc">快速切换常用颜色，长按保存，双击归零</div></div>
-      <div class="feat__cell anim scale d5"><span class="feat__num">04</span><div class="feat__icon">🖱</div><div class="feat__name">悬浮按钮</div><div class="feat__desc">点按弹控制面板，长按开关蒙版，可拖动靠边吸附</div></div>
-      <div class="feat__cell anim scale d6"><span class="feat__num">05</span><div class="feat__icon">🔔</div><div class="feat__name">常驻通知</div><div class="feat__desc">通知栏置顶显示，支持切换/设置/关闭</div></div>
-      <div class="feat__cell anim scale d7"><span class="feat__num">06</span><div class="feat__icon">⚡</div><div class="feat__name">快捷磁贴</div><div class="feat__desc">下拉通知栏一键开关蒙版</div></div>
-    </div>
+    <div class="feat" id="feat-grid"></div>
   </section>
 
   <!-- SLIDE 4: USAGE -->
-  <section class="slide">
+  <section class="slide" id="slide-usage">
     <div class="sec__head anim d1">
-      <span class="sec__num">02</span>
-      <h2 class="sec__title"><span>快速</span><em>上手</em></h2>
+      <span class="sec__num" id="usage-section-num">02</span>
+      <h2 class="sec__title"><span id="usage-title">快速</span><em id="usage-title-em">上手</em></h2>
     </div>
-    <div class="how__grid" id="usage-grid">
-      <div class="how__cell how__cell--accent anim from-l d2">
-        <span class="how__step">01</span><div class="how__icon">🔓</div>
-        <div><div class="how__name">授予悬浮窗权限</div><div class="how__desc">点击主界面按钮跳转设置开启</div></div>
-      </div>
-      <div class="how__cell anim from-r d3">
-        <span class="how__step">02</span><div class="how__icon">🔔</div>
-        <div><div class="how__name">允许通知</div><div class="how__desc">Android 13+ 启动时自动申请</div></div>
-      </div>
-      <div class="how__cell anim from-l d4">
-        <span class="how__step">03</span><div class="how__icon">▶</div>
-        <div><div class="how__name">启动蒙版</div><div class="how__desc">点击「启动蒙版」按钮或长按悬浮钮</div></div>
-      </div>
-      <div class="how__cell how__cell--accent anim from-r d5">
-        <span class="how__step">04</span><div class="how__icon">🎨</div>
-        <div><div class="how__name">调色并保存</div><div class="how__desc">拖 HSL 滑条调色，长按预设存储</div></div>
-      </div>
-      <div class="how__flow anim d6">
-        <span>授权</span><span class="arrow">→</span><span>启动</span><span class="arrow">→</span><span>调色</span><span class="arrow">→</span><span>保存</span>
-      </div>
-    </div>
+    <div class="how__grid" id="usage-grid"></div>
   </section>
 
   <!-- SLIDE 5: INSTALL -->
-  <section class="slide install">
+  <section class="slide install" id="slide-install">
     <div class="sec__head anim d1">
-      <span class="sec__num">03</span>
-      <h2 class="sec__title"><span>安装</span><em>指南</em></h2>
+      <span class="sec__num" id="install-section-num">03</span>
+      <h2 class="sec__title"><span id="install-title">安装</span><em id="install-title-em">指南</em></h2>
     </div>
     <div class="install__grid">
-      <div>
-        <ul class="install__steps">
-          <li class="install__step anim d2"><span class="install__step-num">1</span><div><div class="install__step-title">下载 APK</div><div class="install__step-desc">从 Releases 下载最新 yeshen-mode-*.apk</div></div></li>
-          <li class="install__step anim d3"><span class="install__step-num">2</span><div><div class="install__step-title">允许安装</div><div class="install__step-desc">系统提示时点击「继续安装」</div></div></li>
-          <li class="install__step anim d4"><span class="install__step-num">3</span><div><div class="install__step-title">授予悬浮窗</div><div class="install__step-desc">打开悬浮窗权限开关</div></div></li>
-          <li class="install__step anim d5"><span class="install__step-num">4</span><div><div class="install__step-title">开始使用</div><div class="install__step-desc">点击「启动蒙版」即可</div></div></li>
-        </ul>
-      </div>
+      <div><ul class="install__steps" id="install-steps"></ul></div>
       <div class="anim d4">
-        <div class="install__code">
-          <span class="cm">git clone</span> https://github.com/<br><span class="hl">Simiely</span>/<span class="hl">DarkMask</span>.git<br>
-          <span class="cm"># 或用最新 Release</span>
-        </div>
-        <div class="install__code" style="margin-top:12px;padding:12px 20px">
-          <span class="cm">● Android 6.0+ (minSdk 23)</span><br>
-          <span class="cm">● HyperOS / MIUI 完全兼容</span><br>
-          <span class="cm">● 无需 Root · 无后台进程</span>
-        </div>
-        <div style="margin-top:20px;">
-          <a href="https://github.com/Simiely/DarkMask/releases" target="_blank" class="btn-primary" style="display:inline-flex;font-size:13px;padding:12px 28px;">⬇ 下载夜深模式 v2.1</a>
-        </div>
+        <div class="install__code" id="install-code-snippet"><span class="cm"># 代码示例</span><br>git clone ...</div>
+        <div class="install__code" style="margin-top:12px;padding:12px 20px" id="install-compat-info"><span class="cm">● 兼容性信息</span></div>
+        <div style="margin-top:20px;"><a href="#" target="_blank" class="btn-primary" id="install-download-btn" style="display:inline-flex;font-size:13px;padding:12px 28px;">⬇ 下载最新版</a></div>
       </div>
     </div>
   </section>
@@ -323,61 +280,250 @@
   <!-- SLIDE 6: CTA -->
   <section class="slide cta">
     <div class="cta__inner">
-      <div class="cta__eyebrow anim d1">试试看？</div>
-      <h2 class="cta__title anim d2">夜深了<br><em>让屏幕更舒适</em></h2>
-      <div class="cta__btns anim d3">
-        <a href="https://github.com/Simiely/DarkMask" target="_blank" class="btn-primary">★ Star on GitHub</a>
-        <a href="https://github.com/Simiely/DarkMask/issues" target="_blank" class="btn-ghost">💬 反馈问题</a>
-      </div>
-      <p class="cta__meta anim d4">MIT License · Made by <a href="https://github.com/Simiely" target="_blank">Simiely</a></p>
+      <div class="cta__eyebrow anim d1" id="cta-eyebrow">试试看？</div>
+      <h2 class="cta__title anim d2" id="cta-title">夜深了<br><em>让屏幕更舒适</em></h2>
+      <div class="cta__btns anim d3" id="cta-buttons"></div>
+      <p class="cta__meta anim d4" id="cta-meta">MIT License · Made by <a href="https://github.com/Simiely" target="_blank">Simiely</a></p>
     </div>
   </section>
 
 </div>
 
 <script>
+// ════════════════════════════════════════════════════════════════
+//  CONFIG — 产品配置（修改此处即可定制页面）
+// ════════════════════════════════════════════════════════════════
+var CONFIG = {
+  pageTitle: "夜深模式 — 全屏降亮护眼",
+  brand: "夜深模式",
+  version: "v2.1",
+  accentColor: "#FB7299",
+  repoUrl: "https://github.com/Simiely/DarkMask",
+  issuesUrl: "https://github.com/Simiely/DarkMask/issues",
+  authorName: "Simiely",
+  authorUrl: "https://github.com/Simiely",
+  license: "MIT License",
+  hero: {
+    titleLine1: "全屏降亮",
+    titleLine2: "护眼",
+    titleEmphasis: "蒙版",
+    featureLabel: "夜间利器",
+    featureText: "可调节透明度与颜色的<b>全屏蒙版</b>，覆盖状态栏与刘海区",
+    subtitle: "在前台绘制可自定义的降亮蒙版，<b>有效降低屏幕亮度</b>，适合夜间使用",
+    badgeLabel: "特性",
+    badgeIcon: "🌙",
+    tags: ["HyperOS 3", "Android 13+", "前台服务"],
+    tickerItems: ["覆盖状态栏与刘海", "3个颜色预设", "HSL 调色", "悬浮按钮控制", "可拖拽·靠边吸附", "通知栏快捷操作"]
+  },
+  problem: {
+    eyebrow: "痛点",
+    title: "屏幕不够暗<br><em>刺眼难入睡</em>",
+    description: "手机最低亮度在黑暗环境中仍然刺眼。系统自带的亮度调节范围有限，且无法过滤蓝光色调。<strong>夜深模式</strong>通过绘制自定义颜色的全屏蒙版，将亮度降到系统无法达到的水平。",
+    stats: [
+      { number: "1%–95%", label: "透明度\\n可调范围" },
+      { number: "360°", label: "色相\\n全覆盖" },
+      { number: "3", label: "颜色\\n预设槽" }
+    ]
+  },
+  features: {
+    sectionNumber: "01",
+    title: "全部",
+    titleEmphasis: "功能",
+    items: [
+      { icon: "🌗", name: "全屏蒙版", desc: "覆盖状态栏与刘海，支持自定义颜色与透明度" },
+      { icon: "🎨", name: "HSL 调色", desc: "色相 × 饱和度 × 亮度精细调节，实时对分预览" },
+      { icon: "📌", name: "3个颜色预设", desc: "快速切换常用颜色，长按保存，双击归零" },
+      { icon: "🖱", name: "悬浮按钮", desc: "点按弹控制面板，长按开关蒙版，可拖动靠边吸附" },
+      { icon: "🔔", name: "常驻通知", desc: "通知栏置顶显示，支持切换/设置/关闭" },
+      { icon: "⚡", name: "快捷磁贴", desc: "下拉通知栏一键开关蒙版" }
+    ]
+  },
+  usage: {
+    sectionNumber: "02",
+    title: "快速",
+    titleEmphasis: "上手",
+    steps: [
+      { icon: "🔓", name: "授予悬浮窗权限", desc: "点击主界面按钮跳转设置开启", accent: true },
+      { icon: "🔔", name: "允许通知", desc: "Android 13+ 启动时自动申请", accent: false },
+      { icon: "▶", name: "启动蒙版", desc: "点击「启动蒙版」按钮或长按悬浮钮", accent: false },
+      { icon: "🎨", name: "调色并保存", desc: "拖 HSL 滑条调色，长按预设存储", accent: true }
+    ],
+    flowLabels: ["授权", "→", "启动", "→", "调色", "→", "保存"]
+  },
+  install: {
+    sectionNumber: "03",
+    title: "安装",
+    titleEmphasis: "指南",
+    steps: [
+      { title: "下载 APK", desc: "从 Releases 下载最新 yeshen-mode-*.apk" },
+      { title: "允许安装", desc: "系统提示时点击「继续安装」" },
+      { title: "授予悬浮窗", desc: "打开悬浮窗权限开关" },
+      { title: "开始使用", desc: "点击「启动蒙版」即可" }
+    ],
+    codeSnippet: 'git clone https://github.com/<br><span class="hl">Simiely</span>/<span class="hl">DarkMask</span>.git<br><span class="cm"># 或用最新 Release</span>',
+    compatInfo: '● Android 6.0+ (minSdk 23)<br>● HyperOS / MIUI 完全兼容<br>● 无需 Root · 无后台进程',
+    downloadUrl: "https://github.com/Simiely/DarkMask/releases",
+    downloadLabel: "⬇ 下载夜深模式 v2.1"
+  },
+  cta: {
+    eyebrow: "试试看？",
+    title: "夜深了<br><em>让屏幕更舒适</em>",
+    buttons: [
+      { url: "https://github.com/Simiely/DarkMask", label: "★ Star on GitHub", primary: true },
+      { url: "https://github.com/Simiely/DarkMask/issues", label: "💬 反馈问题", primary: false }
+    ],
+    metaHtml: 'MIT License · Made by <a href="https://github.com/Simiely" target="_blank">Simiely</a>'
+  },
+  dotLabels: ["首页", "痛点", "功能", "上手", "安装", "开始"]
+};
+
+// ════════════════════════════════════════════════════════════════
+//  渲染逻辑 — 读取 CONFIG 并注入页面
+// ════════════════════════════════════════════════════════════════
+(function(){
+  var cfg = CONFIG;
+  document.documentElement.style.setProperty('--rose', cfg.accentColor);
+  function hexToRgb(hex) {
+    var r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    return r+','+g+','+b;
+  }
+  function darken(hex, a) {
+    var c = function(v){ return Math.max(0,parseInt(v,16)-a).toString(16).padStart(2,'0'); };
+    return '#'+c(hex.slice(1,3))+c(hex.slice(3,5))+c(hex.slice(5,7));
+  }
+  document.documentElement.style.setProperty('--rose-rgb', hexToRgb(cfg.accentColor));
+  document.documentElement.style.setProperty('--rose-deep', darken(cfg.accentColor, 30));
+
+  document.title = cfg.pageTitle;
+  document.getElementById('brand-name').textContent = cfg.brand;
+  document.getElementById('nav-version').textContent = cfg.version;
+  document.querySelector('.nav__meta a').href = cfg.repoUrl;
+  document.getElementById('nav-version-link').href = cfg.repoUrl;
+
+  document.getElementById('hero-title-1').textContent = cfg.hero.titleLine1;
+  document.getElementById('hero-title-2').textContent = cfg.hero.titleLine2;
+  document.getElementById('hero-title-em').textContent = cfg.hero.titleEmphasis;
+  document.getElementById('hero-feat-label').textContent = cfg.hero.featureLabel;
+  document.getElementById('hero-feat-text').innerHTML = cfg.hero.featureText;
+  document.getElementById('hero-subtitle').innerHTML = cfg.hero.subtitle;
+  document.getElementById('hero-badge-label').textContent = cfg.hero.badgeLabel;
+  document.getElementById('hero-badge-icon').textContent = cfg.hero.badgeIcon;
+  var tc = document.getElementById('hero-badge-tags');
+  tc.innerHTML = '';
+  cfg.hero.tags.forEach(function(t){ var s = document.createElement('span'); s.textContent = t; tc.appendChild(s); });
+
+  var tk = document.getElementById('ticker-track');
+  tk.innerHTML = '';
+  var d = cfg.hero.tickerItems.concat(cfg.hero.tickerItems);
+  d.forEach(function(i){ var s = document.createElement('span'); s.className='ticker__item'; s.textContent=i; tk.appendChild(s); });
+
+  document.getElementById('problem-eyebrow').textContent = cfg.problem.eyebrow;
+  document.getElementById('problem-title').innerHTML = cfg.problem.title;
+  document.getElementById('problem-desc').innerHTML = cfg.problem.description;
+  var ps = document.getElementById('problem-stats');
+  ps.innerHTML = '';
+  cfg.problem.stats.forEach(function(s){
+    var d = document.createElement('div'); d.className='item';
+    d.innerHTML = '<span class="n">'+s.number+'</span><span class="l">'+s.label.replace(/\\n/g,'<br>')+'</span>';
+    ps.appendChild(d);
+  });
+
+  document.getElementById('feat-section-num').textContent = cfg.features.sectionNumber;
+  document.getElementById('feat-title').textContent = cfg.features.title;
+  document.getElementById('feat-title-em').textContent = cfg.features.titleEmphasis;
+  var fg = document.getElementById('feat-grid');
+  fg.innerHTML = '';
+  cfg.features.items.forEach(function(f,i){
+    var c = document.createElement('div'); c.className='feat__cell anim scale d'+Math.min(i+2,7);
+    c.innerHTML = '<span class="feat__num">'+(i+1).toString().padStart(2,'0')+'</span><div class="feat__icon">'+f.icon+'</div><div class="feat__name">'+f.name+'</div><div class="feat__desc">'+f.desc+'</div>';
+    fg.appendChild(c);
+  });
+
+  document.getElementById('usage-section-num').textContent = cfg.usage.sectionNumber;
+  document.getElementById('usage-title').textContent = cfg.usage.title;
+  document.getElementById('usage-title-em').textContent = cfg.usage.titleEmphasis;
+  var ug = document.getElementById('usage-grid');
+  ug.innerHTML = '';
+  cfg.usage.steps.forEach(function(s,i){
+    var c = document.createElement('div');
+    c.className = 'how__cell'+(s.accent?' how__cell--accent':'')+' anim '+(i%2===0?'from-l':'from-r')+' d'+(i+2);
+    c.innerHTML = '<span class="how__step">0'+(i+1)+'</span><div class="how__icon">'+s.icon+'</div><div><div class="how__name">'+s.name+'</div><div class="how__desc">'+s.desc+'</div></div>';
+    ug.appendChild(c);
+  });
+  var fb = document.createElement('div'); fb.className='how__flow anim d'+(cfg.usage.steps.length+2);
+  fb.innerHTML = cfg.usage.flowLabels.map(function(l){ return l==='→'?'<span class="arrow">→</span>':'<span>'+l+'</span>'; }).join('');
+  ug.appendChild(fb);
+
+  document.getElementById('install-section-num').textContent = cfg.install.sectionNumber;
+  document.getElementById('install-title').textContent = cfg.install.title;
+  document.getElementById('install-title-em').textContent = cfg.install.titleEmphasis;
+  var is = document.getElementById('install-steps');
+  is.innerHTML = '';
+  cfg.install.steps.forEach(function(s,i){
+    var li = document.createElement('li'); li.className='install__step anim d'+(i+2);
+    li.innerHTML = '<span class="install__step-num">'+(i+1)+'</span><div><div class="install__step-title">'+s.title+'</div><div class="install__step-desc">'+s.desc+'</div></div>';
+    is.appendChild(li);
+  });
+  document.getElementById('install-code-snippet').innerHTML = cfg.install.codeSnippet;
+  document.getElementById('install-compat-info').innerHTML = cfg.install.compatInfo;
+  var dl = document.getElementById('install-download-btn');
+  dl.href = cfg.install.downloadUrl; dl.innerHTML = cfg.install.downloadLabel;
+
+  document.getElementById('cta-eyebrow').textContent = cfg.cta.eyebrow;
+  document.getElementById('cta-title').innerHTML = cfg.cta.title;
+  var cb = document.getElementById('cta-buttons');
+  cb.innerHTML = '';
+  cfg.cta.buttons.forEach(function(b){
+    var a = document.createElement('a'); a.href=b.url; a.target='_blank'; a.className=b.primary?'btn-primary':'btn-ghost';
+    a.textContent=b.label; cb.appendChild(a);
+  });
+  document.getElementById('cta-meta').innerHTML = cfg.cta.metaHtml;
+
+  var dbs = document.querySelectorAll('.dot-btn');
+  cfg.dotLabels.forEach(function(l,i){ if(dbs[i]){ dbs[i].setAttribute('data-label',l); dbs[i].setAttribute('aria-label',l); }});
+})();
+
+// ════════════════════════════════════════════════════════════════
+//  交互逻辑（滚动吸附、导航点、鼠标视差）
+// ════════════════════════════════════════════════════════════════
 (function(){
   var deck = document.getElementById('deck');
   var slides = deck.querySelectorAll('.slide');
   var dots = document.querySelectorAll('.dot-btn');
   var hint = document.getElementById('hint');
-  var activeIndex = -1;
-  var ticking = false;
-  function updateActive(){
-    var scrollTop = deck.scrollTop;
-    var viewHeight = deck.clientHeight;
-    var bestIdx = 0, bestDist = Infinity;
-    slides.forEach(function(s, i) {
-      var rect = s.getBoundingClientRect();
-      var mid = rect.top + rect.height / 2;
-      var dist = Math.abs(mid - viewHeight / 2);
-      if(dist < bestDist){ bestDist = dist; bestIdx = i; }
+  var activeIndex = -1, ticking = false;
+  function update(){
+    var st = deck.scrollTop, vh = deck.clientHeight;
+    var bi = 0, bd = Infinity;
+    slides.forEach(function(s,i){
+      var r = s.getBoundingClientRect(), m = r.top + r.height/2, d = Math.abs(m - vh/2);
+      if(d < bd){ bd = d; bi = i; }
     });
-    if(bestIdx !== activeIndex){
-      activeIndex = bestIdx;
-      dots.forEach(function(d, i) { d.classList.toggle('active', i === activeIndex); });
-      slides.forEach(function(s, i) { s.classList.toggle('is-active', i === activeIndex); });
+    if(bi !== activeIndex){
+      activeIndex = bi;
+      dots.forEach(function(d,i){ d.classList.toggle('active', i===bi); });
+      slides.forEach(function(s,i){ s.classList.toggle('is-active', i===bi); });
     }
-    hint.classList.toggle('hide', scrollTop > 10);
+    hint.classList.toggle('hide', st > 10);
   }
-  deck.addEventListener('scroll', function() {
-    if(!ticking){ requestAnimationFrame(function() { updateActive(); ticking = false; }); ticking = true; }
+  deck.addEventListener('scroll', function(){
+    if(!ticking){ requestAnimationFrame(function(){ update(); ticking=false; }); ticking=true; }
   });
-  dots.forEach(function(dot) {
-    dot.addEventListener('click', function() {
-      var target = slides[parseInt(dot.dataset.index)];
-      if(target) target.scrollIntoView({ behavior: 'smooth' });
+  dots.forEach(function(d){
+    d.addEventListener('click', function(){
+      var t = slides[parseInt(d.dataset.index)];
+      if(t) t.scrollIntoView({behavior:'smooth'});
     });
   });
-  var ps = document.querySelector('.problem');
-  if(ps) document.addEventListener('mousemove', function(e) {
-    var r = ps.getBoundingClientRect();
+  var p = document.querySelector('.problem');
+  if(p) document.addEventListener('mousemove', function(e){
+    var r = p.getBoundingClientRect();
     if(r.top < window.innerHeight && r.bottom > 0){
-      ps.style.setProperty('--mx', (e.clientX / window.innerWidth * 100) + '%');
-      ps.style.setProperty('--my', (e.clientY / window.innerHeight * 100) + '%');
+      p.style.setProperty('--mx', (e.clientX/window.innerWidth*100)+'%');
+      p.style.setProperty('--my', (e.clientY/window.innerHeight*100)+'%');
     }
   });
-  updateActive();
+  update();
 })();
 </script>
 </body>
