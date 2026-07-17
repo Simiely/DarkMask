@@ -62,18 +62,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:background="@drawable/bg_button"
-            android:textColor="@color/text_primary"
-            android:text="启动蒙版" />
+            android:text="启动蒙版"
+            android:textColor="@color/btn_text" />
 
         <Button
             android:id="@+id/btn_perm_overlay"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:background="@drawable/bg_button"
-            android:textColor="@color/text_primary"
-            android:text="悬浮窗权限" />
+            android:text="悬浮窗权限"
+            android:textColor="@color/btn_text" />
 
         <!-- 设置 -->
         <LinearLayout
@@ -173,9 +171,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/bg_button"
-                android:textColor="@color/text_primary"
-                android:text="保存当前颜色到槽位" />
+                android:text="保存当前颜色到槽位"
+                android:textColor="@color/btn_text" />
 
             <Switch
                 android:id="@+id/sw_hidefab"

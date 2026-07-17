@@ -1,16 +1,8 @@
 <resources>
-    <!-- 强调色（粉） -->
     <color name="accent">#FB7299</color>
-    <!-- 页面背景：浅灰（替代原来的深黑 bg_dark） -->
-    <color name="bg_dark">#F2F2F2</color>
-    <!-- 卡片表面：白 -->
-    <color name="card_bg">#FFFFFF</color>
-    <!-- 主要文字：90% 黑 -->
-    <color name="text_primary">#1A1A1A</color>
-    <!-- 次要文字：约 70% 黑 -->
-    <color name="text_secondary">#4D4D4D</color>
-    <!-- 普通按钮：白底 -->
-    <color name="btn_bg">#FFFFFF</color>
-    <!-- 普通按钮边框 -->
-    <color name="btn_border">#D0D0D0</color>
+    <color name="bg_dark">#121212</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B0B0B0</color>
+    <!-- 按钮文字：90% 黑（用于粉色填充按钮上，其余界面文字保持白色不变） -->
+    <color name="btn_text">#1A1A1A</color>
 </resources>
