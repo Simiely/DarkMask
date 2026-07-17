@@ -387,6 +387,7 @@ class OverlayService : Service() {
                 if (col == null) {
                     setColor(0xFF333333.toInt())
                     btn.text = "＋"
+                    btn.setTextColor(0xFFFFFFFF.toInt())
                 } else {
                     setColor(col)
                     btn.text = ""

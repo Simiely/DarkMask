@@ -18,6 +18,7 @@ import android.widget.SeekBar
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -39,6 +40,29 @@ class MainActivity : AppCompatActivity() {
     private lateinit var swHideFab: Switch
     private lateinit var llPresets: LinearLayout
     private var hslDragging = false
+
+    /**
+     * 通知权限请求器。Android 13+ 必须在 POST_NOTIFICATIONS 已授予后，
+     * 才能 startForeground()，否则 startForeground() 的通知会被系统静默丢弃。
+     * 这里用回调在“用户点允许之后”再启动服务，而不是旧写法那样不等授权就启动。
+     */
+    private val notifPermLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            startOverlayServiceNow()
+        } else {
+            // 被拒绝：蒙版仍可用，但常驻通知不显示。
+            if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.POST_NOTIFICATIONS)) {
+                // 用户勾选了“不再询问”：直接跳系统通知设置页手动开启。
+                Toast.makeText(this, "已为你打开通知设置，请允许“夜深模式”发送通知", Toast.LENGTH_LONG).show()
+                openNotificationSettings()
+            } else {
+                Toast.makeText(this, "通知权限被拒绝，常驻通知将不显示", Toast.LENGTH_LONG).show()
+            }
+            startOverlayServiceNow()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -140,6 +164,7 @@ class MainActivity : AppCompatActivity() {
                 if (col == null) {
                     setColor(0xFF333333.toInt())
                     btn.text = "＋"
+                    btn.setTextColor(0xFFFFFFFF.toInt())
                 } else {
                     setColor(col)
                     btn.text = ""
@@ -188,16 +213,34 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "请先授予悬浮窗权限", Toast.LENGTH_LONG).show()
             return
         }
+        // 关键修复：Android 13+ 必须在 POST_NOTIFICATIONS 已授予后启动前台服务，
+        // 否则 startForeground() 的通知会被系统静默丢弃（看不见通知，但蒙版照常运行）。
+        // 旧写法在 requestPermissions 异步弹窗未确定时就 startForegroundService，导致通知丢失。
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
         ) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
+            notifPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            return
         }
+        startOverlayServiceNow()
+    }
+
+    /** 真正启动前台服务（前提：通知权限已就绪 / 或不需要）。 */
+    private fun startOverlayServiceNow() {
         val i = Intent(this, OverlayService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(i) else startService(i)
         Prefs.setEnabled(this, true)
         Handler(Looper.getMainLooper()).postDelayed({ refreshStatus() }, 600)
+    }
+
+    /** 跳转系统通知设置页，便于手动开启本项目通知。 */
+    private fun openNotificationSettings() {
+        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        startActivity(intent)
     }
 
     private fun applyToService() {

@@ -121,6 +121,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
+        android:background="@drawable/bg_button"
+        android:textColor="@color/text_primary"
         android:text="保存当前颜色到选中预设" />
 
     <Switch
@@ -137,6 +139,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:background="@drawable/bg_button"
+        android:textColor="@color/text_primary"
         android:text="收起面板" />
 
     <Button
