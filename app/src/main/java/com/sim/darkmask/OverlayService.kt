@@ -45,12 +45,13 @@ class OverlayService : Service() {
         const val ACTION_PANEL = "com.sim.darkmask.ACTION_PANEL"
         private const val NOTIF_ID = 1001
 
-        /** 服务是否正在运行（用于 MainActivity 判断） */
-        fun isRunning(ctx: Context): Boolean {
-            val am = ctx.getSystemService(ACTIVITY_SERVICE) as android.app.ActivityManager
-            return am.getRunningServices(Int.MAX_VALUE)
-                .any { it.service.className == OverlayService::class.java.name }
-        }
+        /** 服务是否正在运行（由 onCreate/onDestroy 管理，避免废弃的 getRunningServices API）。 */
+        @JvmStatic var isRunning = false
+            private set
+
+        /** 兼容旧调用方（MainActivity、PanelLauncherActivity），委托给静态变量。 */
+        @JvmStatic
+        fun isRunning(ctx: Context): Boolean = isRunning
     }
 
     private lateinit var wm: WindowManager
@@ -98,8 +99,11 @@ class OverlayService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
+
     override fun onCreate() {
         super.onCreate()
+        isRunning = true
         wm = getSystemService(WINDOW_SERVICE) as WindowManager
 
         val f = IntentFilter().apply {
@@ -397,12 +401,19 @@ class OverlayService : Service() {
             }
             btn.background = bg
             btn.setOnClickListener {
-                val c = Prefs.getPreset(this@OverlayService, i) ?: return@setOnClickListener
-                val refs = panelRefs ?: return@setOnClickListener
-                Prefs.setColor(this@OverlayService, c)
-                Prefs.setSelectedPreset(this@OverlayService, i)
-                syncHsl(c, refs.h, refs.s, refs.l)
-                applyAll()
+                val c = Prefs.getPreset(this@OverlayService, i)
+                if (c != null) {
+                    val refs = panelRefs ?: return@setOnClickListener
+                    Prefs.setColor(this@OverlayService, c)
+                    Prefs.setSelectedPreset(this@OverlayService, i)
+                    syncHsl(c, refs.h, refs.s, refs.l)
+                    applyAll()
+                } else {
+                    // 空槽：把当前颜色存进去
+                    Prefs.setPreset(this@OverlayService, i, Prefs.getColor(this@OverlayService))
+                    Prefs.setSelectedPreset(this@OverlayService, i)
+                    Toast.makeText(this@OverlayService, "已保存到预设${i + 1}", Toast.LENGTH_SHORT).show()
+                }
                 buildPresetButtons(container)
             }
             btn.setOnLongClickListener {
@@ -467,6 +478,7 @@ class OverlayService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        isRunning = false
         try { unregisterReceiver(receiver) } catch (_: Exception) {}
         dimView?.let { wm.removeView(it) }
         fab?.let { wm.removeView(it) }

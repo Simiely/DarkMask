@@ -24,6 +24,7 @@ class MaskTileService : TileService() {
     override fun onStartListening() = refresh()
 
     override fun onClick() {
+        if (isSecure()) return  // 锁屏状态不响应
         sendBroadcast(Intent(OverlayService.ACTION_TOGGLE).setPackage(packageName))
         refresh()
     }

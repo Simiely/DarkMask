@@ -13,9 +13,9 @@ import kotlin.math.roundToInt
 object ColorUtil {
 
     fun rgbToHsl(color: Int): Triple<Int, Int, Int> {
-        val r = Color.red(color) / 255f
-        val g = Color.green(color) / 255f
-        val b = Color.blue(color) / 255f
+        val r = ((color shr 16) and 0xFF) / 255f
+        val g = ((color shr 8) and 0xFF) / 255f
+        val b = (color and 0xFF) / 255f
         val mx = max(max(r, g), b)
         val mn = min(min(r, g), b)
         val l = (mx + mn) / 2f

@@ -122,6 +122,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         refreshStatus()
         syncUI()
+        buildPresets()
     }
 
     private fun refreshStatus() {
@@ -174,12 +175,19 @@ class MainActivity : AppCompatActivity() {
             }
             btn.background = bg
             btn.setOnClickListener {
-                val c = Prefs.getPreset(this@MainActivity, i) ?: return@setOnClickListener
-                Prefs.setColor(this@MainActivity, c)
-                Prefs.setSelectedPreset(this@MainActivity, i)
-                val (hh, ss, ll) = ColorUtil.rgbToHsl(c)
-                seekH.progress = hh; seekS.progress = ss; seekL.progress = ll
-                applyToService()
+                val c = Prefs.getPreset(this@MainActivity, i)
+                if (c != null) {
+                    Prefs.setColor(this@MainActivity, c)
+                    Prefs.setSelectedPreset(this@MainActivity, i)
+                    val (hh, ss, ll) = ColorUtil.rgbToHsl(c)
+                    seekH.progress = hh; seekS.progress = ss; seekL.progress = ll
+                    applyToService()
+                } else {
+                    // 空槽：把当前颜色存进去
+                    Prefs.setPreset(this@MainActivity, i, Prefs.getColor(this@MainActivity))
+                    Prefs.setSelectedPreset(this@MainActivity, i)
+                    Toast.makeText(this@MainActivity, "已保存到预设${i + 1}", Toast.LENGTH_SHORT).show()
+                }
                 buildPresets()
             }
             btn.setOnLongClickListener {
