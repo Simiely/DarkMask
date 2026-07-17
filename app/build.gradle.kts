@@ -14,6 +14,9 @@ android {
         // 版本号仅在用户明确要求时手动更新，不再每次构建自增。
         versionCode = 6
         versionName = "1.6"
+
+        // 仅保留中文资源，去掉 Material3 自带的 50+ 种语言翻译
+        resourceConfigurations += setOf("zh")
     }
 
     // 固定 debug 签名：所有 CI 构建复用仓库内 keystore/debug.keystore，
@@ -30,6 +33,13 @@ android {
     buildTypes {
         getByName("debug") {
             signingConfig = signingConfigs.getByName("debug")
+            // 开启代码压缩(R8) + 资源裁剪，大幅缩小 APK
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
         release {
             isMinifyEnabled = false
