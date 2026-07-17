@@ -1,0 +1,65 @@
+name: Build DarkMask APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+# Allow the workflow to commit the generated Gradle wrapper back to the repo.
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK packages and accept licenses
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Install Gradle 8.9
+        run: |
+          curl -sSL -o gradle.zip https://services.gradle.org/distributions/gradle-8.9-bin.zip
+          unzip -q gradle.zip
+          echo "$PWD/gradle-8.9/bin" >> "$GITHUB_PATH"
+
+      # The repo ships without a Gradle wrapper. Generate one and commit it
+      # (with [skip ci] so it does not re-trigger this workflow) so the project
+      # becomes buildable via ./gradlew as documented in the README.
+      - name: Generate Gradle wrapper if missing
+        run: |
+          if [ ! -f gradlew ]; then
+            gradle wrapper --gradle-version 8.9
+            git config user.email "actions@github.com"
+            git config user.name "github-actions[bot]"
+            git add gradlew gradlew.bat gradle/wrapper
+            git commit -m "ci: add Gradle wrapper [skip ci]" || echo "nothing to commit"
+            git push || echo "push skipped"
+          fi
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: DarkMask-debug
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
