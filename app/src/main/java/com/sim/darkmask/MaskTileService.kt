@@ -15,7 +15,7 @@ class MaskTileService : TileService() {
         fun update(ctx: android.content.Context) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 try {
-                    requestListeningUpdate(ctx, ComponentName(ctx, MaskTileService::class.java))
+                    TileService.requestListeningState(ctx, ComponentName(ctx, MaskTileService::class.java))
                 } catch (_: Exception) { }
             }
         }
