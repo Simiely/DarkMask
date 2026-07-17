@@ -1,7 +1,6 @@
 package com.sim.darkmask
 
 import android.Manifest
-import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -43,6 +42,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var swHideFab: Switch
     private lateinit var llPresets: LinearLayout
     private var hslDragging = false
+    private val mainHandler = Handler(Looper.getMainLooper())
     /** 预设双击计时：超时归零 */
     private val presetTapTime = LongArray(3) { 0L }
     private val presetTapCount = IntArray(3) { 0 }
@@ -146,6 +146,11 @@ class MainActivity : AppCompatActivity() {
         buildPresets()
     }
 
+    override fun onDestroy() {
+        mainHandler.removeCallbacksAndMessages(null)
+        super.onDestroy()
+    }
+
     private fun refreshStatus() {
         statusOverlay.text = "悬浮窗：" +
             if (Settings.canDrawOverlays(this)) "✅ 已授予" else "❌ 未授予（需手动开启）"
@@ -196,7 +201,7 @@ class MainActivity : AppCompatActivity() {
             }
             btn.background = bg
             btn.setOnClickListener {
-                // 三连击检测：500ms 内点 3 次 → 重置该预设为黑色
+                // 双击检测：500ms 内点 2 次 → HSL 归零
                 val now = System.currentTimeMillis()
                 if (now - presetTapTime[i] > 500) { presetTapCount[i] = 0 }
                 presetTapCount[i]++
@@ -285,7 +290,7 @@ class MainActivity : AppCompatActivity() {
     private fun toggleService() {
         if (OverlayService.isRunning(this)) {
             sendBroadcast(Intent(OverlayService.ACTION_STOP).setPackage(packageName))
-            Handler(Looper.getMainLooper()).postDelayed({ refreshStatus() }, 500)
+            mainHandler.postDelayed({ refreshStatus() }, 500)
             return
         }
         if (!Settings.canDrawOverlays(this)) {
@@ -311,7 +316,7 @@ class MainActivity : AppCompatActivity() {
         val i = Intent(this, OverlayService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(i) else startService(i)
         Prefs.setEnabled(this, true)
-        Handler(Looper.getMainLooper()).postDelayed({ refreshStatus() }, 600)
+        mainHandler.postDelayed({ refreshStatus() }, 600)
     }
 
     /** 跳转系统通知设置页，便于手动开启本项目通知。 */

@@ -10,8 +10,9 @@ import android.os.Bundle
  * 用 Activity（而非直接 broadcast content intent）是为了让系统自动折叠通知栏抽屉，
  * 保证弹出的悬浮控制面板不会被通知阴影盖住。
  *
- * 若服务未运行则先启动，ACTION_START_AND_PANEL 会在服务注册 receiver 后自动弹面板。
- * startForegroundService() 同步等待 onCreate() 完成，此时 receiver 已就绪，广播可靠送达。
+ * 若服务未运行则先启动，再发送 ACTION_START_AND_PANEL 广播。
+ * startForegroundService() 将 Service 创建排入主线程队列，sendBroadcast() 的广播也异步投递，
+ * 两者在主线程上顺序执行，广播投递时 receiver 已就绪，故无需延迟。
  */
 class PanelLauncherActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {

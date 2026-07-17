@@ -261,10 +261,11 @@ class OverlayService : Service() {
         private val longPress = Runnable { longFired = true; toggleMask() }
 
         override fun onTouch(v: View, e: MotionEvent): Boolean {
+            val fp = fabParams ?: return false
             when (e.action) {
                 MotionEvent.ACTION_DOWN -> {
                     startX = e.rawX; startY = e.rawY
-                    paramX = fabParams!!.x; paramY = fabParams!!.y
+                    paramX = fp.x; paramY = fp.y
                     isClick = true; longFired = false
                     handler.postDelayed(longPress, 450)
                     return true
@@ -273,9 +274,9 @@ class OverlayService : Service() {
                     val dx = e.rawX - startX; val dy = e.rawY - startY
                     if (kotlin.math.abs(dx) > 8 || kotlin.math.abs(dy) > 8) {
                         if (isClick) { isClick = false; handler.removeCallbacks(longPress) }
-                        fabParams!!.x = (paramX + dx).toInt()
-                        fabParams!!.y = (paramY + dy).toInt()
-                        wm.updateViewLayout(fab, fabParams)
+                        fp.x = (paramX + dx).toInt()
+                        fp.y = (paramY + dy).toInt()
+                        wm.updateViewLayout(fab, fp)
                     }
                     return true
                 }
@@ -285,16 +286,16 @@ class OverlayService : Service() {
                     if (isClick) {
                         openPanel()
                     } else {
-                        val cx = fabParams!!.x + size / 2
+                        val cx = fp.x + size / 2
                         val edge = (size * 0.6f).toInt()
                         when {
                             cx < edge -> snapToEdge(true)
                             cx > screenW() - edge -> snapToEdge(false)
                             else -> {
-                                fabParams!!.x = fabParams!!.x.coerceIn(0, screenW() - size)
-                                fabParams!!.y = fabParams!!.y.coerceIn(0, screenH() - size)
-                                wm.updateViewLayout(fab, fabParams)
-                                Prefs.setFabPos(this@OverlayService, fabParams!!.x, fabParams!!.y)
+                                fp.x = fp.x.coerceIn(0, screenW() - size)
+                                fp.y = fp.y.coerceIn(0, screenH() - size)
+                                wm.updateViewLayout(fab, fp)
+                                Prefs.setFabPos(this@OverlayService, fp.x, fp.y)
                             }
                         }
                     }
@@ -306,21 +307,23 @@ class OverlayService : Service() {
     }
 
     private fun snapToEdge(left: Boolean) {
+        val fp = fabParams ?: return
         val tab = (fabSize * 0.35f).toInt()
-        val from = fabParams!!.x
+        val from = fp.x
         val target = if (left) -fabSize + tab else screenW() - tab
-        fabParams!!.y = fabParams!!.y.coerceIn(0, screenH() - fabSize)
-        Prefs.setFabPos(this, target, fabParams!!.y)
+        fp.y = fp.y.coerceIn(0, screenH() - fabSize)
+        Prefs.setFabPos(this, target, fp.y)
         animateX(from, target)
     }
 
     private fun animateX(from: Int, to: Int) {
+        val fp = fabParams ?: return
         fabAnimator?.cancel()
         fabAnimator = ValueAnimator.ofInt(from, to).apply {
             duration = 250
             addUpdateListener {
-                fabParams!!.x = it.animatedValue as Int
-                wm.updateViewLayout(fab, fabParams)
+                fp.x = it.animatedValue as Int
+                wm.updateViewLayout(fab, fp)
             }
             start()
         }
