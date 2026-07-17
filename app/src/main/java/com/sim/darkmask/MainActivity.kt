@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var swHideFab: Switch
     private lateinit var llPresets: LinearLayout
     private var hslDragging = false
-    /** 预设三连击计时：双击/三击归零 */
+    /** 预设双击计时：超时归零 */
     private val presetTapTime = LongArray(3) { 0L }
     private val presetTapCount = IntArray(3) { 0 }
 
@@ -107,7 +107,17 @@ class MainActivity : AppCompatActivity() {
                 applyToService()
                 updatePresetPreview()
             }
-            override fun onStartTrackingTouch(sb: SeekBar?) { hslDragging = true }
+            override fun onStartTrackingTouch(sb: SeekBar?) {
+                hslDragging = true
+                // 拖色相时若饱和度或亮度为0则自动提到50，让颜色可见
+                if (sb == seekH && (seekS.progress == 0 || seekL.progress == 0)) {
+                    seekS.progress = 50
+                    seekL.progress = 50
+                    Prefs.setColor(this@MainActivity, ColorUtil.hslToRgb(seekH.progress, 50, 50))
+                    applyToService()
+                    updatePresetPreview()
+                }
+            }
             override fun onStopTrackingTouch(sb: SeekBar?) {
                 hslDragging = false
                 // 不重建预设：让 updatePresetPreview() 的对分效果持续保留
@@ -191,15 +201,13 @@ class MainActivity : AppCompatActivity() {
                 if (now - presetTapTime[i] > 500) { presetTapCount[i] = 0 }
                 presetTapCount[i]++
                 presetTapTime[i] = now
-                if (presetTapCount[i] >= 3) {
+                if (presetTapCount[i] >= 2) {
                     presetTapCount[i] = 0
-                    Prefs.setPreset(this@MainActivity, i, android.graphics.Color.BLACK)
                     Prefs.setColor(this@MainActivity, android.graphics.Color.BLACK)
                     Prefs.setSelectedPreset(this@MainActivity, i)
                     seekH.progress = 0; seekS.progress = 0; seekL.progress = 0
                     applyToService()
-                    buildPresets()
-                    Toast.makeText(this@MainActivity, "已重置为黑色", Toast.LENGTH_SHORT).show()
+                    updatePresetPreview()
                     return@setOnClickListener
                 }
                 // 正常点击：应用已有预设 / 空槽存当前色

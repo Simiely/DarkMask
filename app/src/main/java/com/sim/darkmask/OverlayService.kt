@@ -72,7 +72,7 @@ class OverlayService : Service() {
     private var hslDragging = false
     private var presetContainer: LinearLayout? = null
     private var fabAnimator: ValueAnimator? = null
-    /** 预设三连击计时：双击/三击归零 */
+    /** 预设双击计时：超时归零 */
     private val presetTapTime = LongArray(3) { 0L }
     private val presetTapCount = IntArray(3) { 0 }
 
@@ -85,7 +85,18 @@ class OverlayService : Service() {
             applyAll()
             updatePresetPreview()
         }
-        override fun onStartTrackingTouch(seekBar: SeekBar?) { hslDragging = true }
+        override fun onStartTrackingTouch(seekBar: SeekBar?) {
+            hslDragging = true
+            val refs = panelRefs ?: return
+            // 拖色相时若饱和度或亮度为0则自动提到50，让颜色可见
+            if (seekBar == refs.h && (refs.s.progress == 0 || refs.l.progress == 0)) {
+                refs.s.progress = 50
+                refs.l.progress = 50
+                Prefs.setColor(this@OverlayService, ColorUtil.hslToRgb(refs.h.progress, 50, 50))
+                applyAll()
+                updatePresetPreview()
+            }
+        }
         override fun onStopTrackingTouch(seekBar: SeekBar?) {
             hslDragging = false
             // 不重建预设：让 updatePresetPreview() 的对分效果持续保留
@@ -409,20 +420,19 @@ class OverlayService : Service() {
             }
             btn.background = bg
             btn.setOnClickListener {
-                // 三连击检测：500ms 内点 3 次 → 重置该预设为黑色
+                // 双击检测：500ms 内点 2 次 → 重置该预设为黑色
                 val now = System.currentTimeMillis()
                 if (now - presetTapTime[i] > 500) { presetTapCount[i] = 0 }
                 presetTapCount[i]++
                 presetTapTime[i] = now
-                if (presetTapCount[i] >= 3) {
+                if (presetTapCount[i] >= 2) {
                     presetTapCount[i] = 0
-                    Prefs.setPreset(this@OverlayService, i, android.graphics.Color.BLACK)
+                    // 不存预设：仅把当前色置为黑色，保留预设存储色不动
                     Prefs.setColor(this@OverlayService, android.graphics.Color.BLACK)
                     Prefs.setSelectedPreset(this@OverlayService, i)
                     applyAll()
                     panelRefs?.let { syncHsl(android.graphics.Color.BLACK, it.h, it.s, it.l) }
-                    buildPresetButtons(container)
-                    Toast.makeText(this@OverlayService, "已重置为黑色", Toast.LENGTH_SHORT).show()
+                    updatePresetPreview()
                     return@setOnClickListener
                 }
                 // 正常点击：应用已有预设 / 空槽存当前色
