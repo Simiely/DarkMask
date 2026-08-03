@@ -56,3 +56,11 @@ CI 使用 GitHub Actions 自动构建（JDK 17 + Android SDK 35 + Gradle 8.9）�
 ## 许可
 
 MIT
+
+## 文档索引
+
+| 文档 | 给谁看 | 内容 |
+|---|---|---|
+| [`AGENTS.md`](./AGENTS.md) | AI / 未来的你 | 技术栈、8 条关键坑（前台服务通知/全屏蒙版/签名安全）、构建命令 |
+| [`DEVELOPMENT.md`](./DEVELOPMENT.md) | 开发者 | 12 条问题记录 + 架构 + CI/CD |
+| [`CHANGELOG.md`](./CHANGELOG.md) | 所有人 | 版本变更记录 |
