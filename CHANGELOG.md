@@ -2,6 +2,15 @@
 
 > 项目无正式版本 tag，按开发迭代记录。完整问题记录见 [DEVELOPMENT.md](DEVELOPMENT.md)。
 
+## 文档维护 · 2026-11-17
+
+- 接入 knowledge-base 的**单项目规范**（spec 2.1.3 / repo-kit 2.7.2，profile `link-only`）
+- 新增 `schema/taxonomy.json`、`tools/repo-kit/`、`tools/update-repo-kit.ps1`、`schema/kit.lock.json` 与 CI
+- 只查链接与入口，**不要求 frontmatter**
+- 5 个相对链接纳入检查
+- 本仓 `Build DarkMask APK` 既有失败（sdkmanager 环境问题），与本次接入无关
+- 验收：`REPO CHECK: PASS`（ERROR=0）、`KIT LOCK: PASS (v2.7.2, spec=2.1.3)`
+
 ## 最新迭代（12 轮问题修复记录）
 
 - **通知修复**（13-14 轮）：渠道重要性无法升高 → 换新渠道 id `darkmask_fg_v2` + IMPORTANCE_HIGH；权限异步时序 → `registerForActivityResult` 回调中启动服务
