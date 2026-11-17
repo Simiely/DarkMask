@@ -28,6 +28,11 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # v3 的默认值是 "tools platform-tools"，但 `tools` 这个旧包已从 SDK 仓库移除，
+          # sdkmanager 会报 "Failed to find package 'tools'" 并退出 1。
+          # 只装 platform-tools；platforms/build-tools 由下一步显式指定。
+          packages: "platform-tools"
 
       - name: Install SDK packages and accept licenses
         run: |
